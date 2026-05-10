@@ -1,17 +1,15 @@
 package vn.edu.nlu.fit;
-
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+import vn.edu.nlu.fit.controller.ConnectFourController;
+import vn.edu.nlu.fit.model.ConnectFourGame;
+import vn.edu.nlu.fit.model.ConnectFourWinChecker;
+import vn.edu.nlu.fit.view.ConnectFourView;
+import javax.swing.*;
 public class Main {
     public static void main(String[] args) {
-        //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-        // to see how IntelliJ IDEA suggests fixing it.
-        System.out.printf("Hello and welcome!");
+        ConnectFourGame model = new ConnectFourGame(6, 7, new ConnectFourWinChecker(4));
 
-        for (int i = 1; i <= 5; i++) {
-            //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-            // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-            System.out.println("i = " + i);
-        }
+        ConnectFourView view = new ConnectFourView(model.getRows(), model.getCols());
+
+        ConnectFourController controller = new ConnectFourController(model, view);
     }
 }
