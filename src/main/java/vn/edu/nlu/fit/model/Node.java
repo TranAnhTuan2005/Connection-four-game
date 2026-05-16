@@ -14,5 +14,6 @@ public class Node {
             this.state = state;
             this.children = children;
             this.score = score;
+
         }
 }
