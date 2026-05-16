@@ -20,15 +20,15 @@ public class ConnectFourHeuristic implements Heuristic{
         this.aiId = aiId;
         this.opponentId = opponentId;
     }
-
+    // [UC9 - 9.0] Nhận trạng thái bàn cờ giả lập từ UC8 (AIPlayer.minimaxAlphaBeta)
     @Override
     public int evaluate(Board board) {
         int score = 0;
-
+    // [UC9 - 9.1] Tính điểm ưu tiên vị trí cột trung tâm
         score += scoreCenterColumn(board, aiId);
-
+        // [UC9 - 9.2] Quét bàn cờ theo 4 hướng: ngang, dọc, chéo xuôi, chéo ngược
         score += scoreWinningWindows(board);
-
+        // [UC9 - 9.4] Tổng hợp và trả về điểm số cuối cùng
         return score;
     }
 
@@ -48,25 +48,25 @@ public class ConnectFourHeuristic implements Heuristic{
      */
     private int scoreWinningWindows(Board board) {
         int score = 0;
-
+        // [UC9 - 9.2] Quét ngang
         for (int row = 0; row < board.getRows(); row++) {
             for (int col = 0; col <= board.getCols() - 4; col++) {
                 score += scoreHorizontal(board, row, col);
             }
         }
-
+        // [UC9 - 9.2] Quét dọc
         for (int col = 0; col < board.getCols(); col++) {
             for (int row = 0; row <= board.getRows() - 4; row++) {
                 score += scoreVertical(board, row, col);
             }
         }
-
+        // [UC9 - 9.2] Quét chéo xuôi
         for (int row = 0; row <= board.getRows() - 4; row++) {
             for (int col = 0; col <= board.getCols() - 4; col++) {
                 score += scoreDiagonalDown(board, row, col);
             }
         }
-
+        // [UC9 - 9.2] Quét chéo ngược
         for (int row = 3; row < board.getRows(); row++) {
             for (int col = 0; col <= board.getCols() - 4; col++) {
                 score += scoreDiagonalUp(board, row, col);
@@ -122,7 +122,7 @@ public class ConnectFourHeuristic implements Heuristic{
 
         int emptyRow = -1;
         int emptyCol = -1;
-
+        // [UC9 - 9.3] Đếm số quân AI, đối thủ, ô trống trong cửa sổ 4 ô
         int[][] cells = {{r1, c1}, {r2, c2}, {r3, c3}, {r4, c4}};
 
         for (int[] pos : cells) {
@@ -138,27 +138,29 @@ public class ConnectFourHeuristic implements Heuristic{
                 emptyCol = pos[1];
             }
         }
-
+        // [UC9 - 9.3] Cửa sổ hỗn hợp (có cả AI lẫn đối thủ) → bỏ qua
         if (aiCount > 0 && opponentCount > 0)
             return 0;
 
-
+        // [UC9 - 9.3] 4 quân AI → +10.000 điểm
         if (aiCount == 4)
             return SCORE_FOUR_IN_A_ROW;
+        // [UC9 - 9.3] 4 quân đối thủ → -100.000 điểm
         if (opponentCount == 4)
             return -OPPONENT_FOUR_THREAT;
 
 //      tính điểm cho các chuỗi 3 ô có thể trở thành 4 ô
 //      -> check xem ô trống còn lại có đi được hay không (phải có quân bên dưới thì mới đi được) -> mới tính điểm
         if (emptyCount == 1) {
+            // [UC9 - 9.3] Kiểm tra canDropAt: ô trống có bệ đỡ bên dưới không
             boolean playable = board.canDropAt(emptyRow, emptyCol);
-
+            // [UC9 - 9.3] 3 quân AI + 1 ô trống hợp lệ → +500 điểm
             if (aiCount == 3 && playable) return SCORE_THREE_IN_A_ROW;
-
+            // [UC9 - 9.3] 3 quân đối thủ + 1 ô trống hợp lệ → -1.000 điểm
             if (opponentCount == 3 && playable) return -OPPONENT_THREE_THREAT;
         }
 
-
+        // [UC9 - 9.3] 2 quân AI + 2 ô trống → +50 điểm
         if (aiCount == 2 && emptyCount == 2) return SCORE_TWO_IN_A_ROW;
 
         return 0;
