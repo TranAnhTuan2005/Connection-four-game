@@ -1,5 +1,8 @@
 package vn.edu.nlu.fit.model;
 
+import lombok.Getter;
+
+@Getter
 public class  Move {
     private final int row;
     private final int col;

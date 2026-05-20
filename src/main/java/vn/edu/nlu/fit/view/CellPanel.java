@@ -1,5 +1,7 @@
 package vn.edu.nlu.fit.view;
 
+import vn.edu.nlu.fit.model.Player;
+
 import javax.swing.*;
 import java.awt.*;
 
