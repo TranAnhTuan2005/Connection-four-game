@@ -1,9 +1,10 @@
 package vn.edu.nlu.fit;
 import vn.edu.nlu.fit.controller.ConnectFourController;
 import vn.edu.nlu.fit.model.ConnectFourGame;
+
 import vn.edu.nlu.fit.model.ConnectFourWinChecker;
 import vn.edu.nlu.fit.view.ConnectFourView;
-import javax.swing.*;
+
 public class Main {
     public static void main(String[] args) {
         ConnectFourGame model = new ConnectFourGame(6, 7, new ConnectFourWinChecker(4));
