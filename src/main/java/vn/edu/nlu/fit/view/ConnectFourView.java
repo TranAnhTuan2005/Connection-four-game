@@ -1,9 +1,13 @@
 package vn.edu.nlu.fit.view;
 
+import lombok.Getter;
+import vn.edu.nlu.fit.enums.GameMode;
+import vn.edu.nlu.fit.model.Player;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-
+@Getter
 public class ConnectFourView extends JFrame {
     public static Color themeColor = new Color(30, 144, 255);
     private final int rows;
