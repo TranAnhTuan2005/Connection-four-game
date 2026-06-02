@@ -21,7 +21,11 @@ public class CellPanel extends JPanel {
 
     // Người chơi hiện tại sở hữu ô cờ
     private Player player;
+    // [v2.0 - Thanh Tú] Đánh dấu nếu ô này thuộc đường thắng
+    private boolean isWinning = false;
 
+    // [v2.0 - Thanh Tú] Trạng thái nhấp nháy (toggle bởi Timer ngoài)
+    private boolean blinkOn = true;
     /**
      * Constructor khởi tạo ô cờ
      */
@@ -54,69 +58,59 @@ public class CellPanel extends JPanel {
      * Phương thức dùng để vẽ giao diện ô cờ
      * @param g đối tượng Graphics dùng để vẽ
      */
+    /** [v2.0 - Thanh Tú] Đặt cờ này là ô thắng (để highlight) */
+    public void setWinning(boolean winning) {
+        this.isWinning = winning;
+        repaint();
+    }
+    /** [v2.0 - Thanh Tú] Toggle nhấp nháy - gọi từ Timer trong View */
+    public void toggleBlink() {
+        if (isWinning) {
+            blinkOn = !blinkOn;
+            repaint();
+        }
+    }
+    public boolean isWinning() {
+        return isWinning;
+    }
     @Override
     protected void paintComponent(Graphics g) {
-
         super.paintComponent(g);
 
-        // Tạo đối tượng Graphics2D để hỗ trợ vẽ nâng cao
         Graphics2D g2 = (Graphics2D) g.create();
 
-        // Bật anti-aliasing giúp hình tròn mượt hơn
-        g2.setRenderingHint(
-                RenderingHints.KEY_ANTIALIASING,
-                RenderingHints.VALUE_ANTIALIAS_ON
-        );
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setRenderingHint(RenderingHints.KEY_RENDERING,
+                RenderingHints.VALUE_RENDER_QUALITY);
 
-        // Tăng chất lượng render
-        g2.setRenderingHint(
-                RenderingHints.KEY_RENDERING,
-                RenderingHints.VALUE_RENDER_QUALITY
-        );
-
-        // Khoảng cách padding của quân cờ
         int pad = Math.max(10, getWidth() / 12);
-
-        // Kích thước hình tròn quân cờ
         int size = Math.min(getWidth(), getHeight()) - pad * 2;
-
-        // Tọa độ X của quân cờ
         int x = (getWidth() - size) / 2;
-
-        // Tọa độ Y của quân cờ
         int y = (getHeight() - size) / 2;
 
-        // Biến lưu màu quân cờ
         Color fillColor;
 
-        // Nếu ô chưa có quân cờ -> hiển thị màu xám
         if (player == null) {
-
             fillColor = new Color(230, 230, 230);
-
         } else {
-
-            // Nếu có quân cờ -> lấy màu từ Player
             fillColor = player.getColor();
         }
 
-        // Thiết lập màu quân cờ
         g2.setColor(fillColor);
-
-        // Vẽ hình tròn quân cờ
         g2.fillOval(x, y, size, size);
 
-        // Vẽ viền quân cờ
+        // [v2.0 - Người 1] Vẽ viền vàng nhấp nháy nếu là ô thắng
+        if (isWinning && blinkOn) {
+            g2.setColor(new Color(255, 215, 0));  // gold
+            g2.setStroke(new BasicStroke(5f));
+            g2.drawOval(x - 2, y - 2, size + 4, size + 4);
+        } else {
+            g2.setColor(new Color(20, 20, 20, 200));
+            g2.setStroke(new BasicStroke(2f));
+            g2.drawOval(x, y, size, size);
+        }
 
-        g2.setColor(new Color(20, 20, 20, 200));
-
-        // Độ dày viền
-        g2.setStroke(new BasicStroke(2f));
-
-        // Vẽ viền hình tròn
-        g2.drawOval(x, y, size, size);
-
-        // Giải phóng tài nguyên đồ họa
         g2.dispose();
     }
 }
