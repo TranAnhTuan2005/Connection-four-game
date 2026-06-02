@@ -3,7 +3,7 @@ package vn.edu.nlu.fit.view;
 import lombok.Getter;
 import vn.edu.nlu.fit.enums.GameMode;
 import vn.edu.nlu.fit.model.Player;
-
+import javax.swing.Timer;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -18,6 +18,10 @@ public class ConnectFourView extends JFrame {
     private final JButton[] colButtons;
     private final JLabel statusLabel;
     private final JButton resetButton;
+    // [v2.0 - Người 5] Nút Hint, Save, Load
+    private JButton hintButton;
+    private JButton saveButton;
+    private JButton loadButton;
 
     public ConnectFourView(int rows, int cols) {
         this.rows = rows;
@@ -27,6 +31,11 @@ public class ConnectFourView extends JFrame {
         this.statusLabel = new JLabel("Lượt: Người chơi 1 (Đỏ)");
         this.resetButton = new JButton("Reset");
         this.setLayout(new BorderLayout(8, 8));
+
+        // [v2.0 - Người 5] Khởi tạo các nút mới
+        this.hintButton = new JButton("💡 Hint");
+        this.saveButton = new JButton("💾 Save");
+        this.loadButton = new JButton("📂 Load");
 
         JPanel wrapper = new JPanel(new BorderLayout());
         wrapper.add(new TitlePanel(), BorderLayout.NORTH);
