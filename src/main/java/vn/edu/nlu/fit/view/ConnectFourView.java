@@ -1,6 +1,7 @@
 package vn.edu.nlu.fit.view;
 
 import lombok.Getter;
+import vn.edu.nlu.fit.enums.AIDifficulty;
 import vn.edu.nlu.fit.enums.GameMode;
 import vn.edu.nlu.fit.model.Player;
 import javax.swing.Timer;
@@ -23,6 +24,11 @@ public class ConnectFourView extends JFrame {
     private JButton saveButton;
     private JButton loadButton;
 
+    // [v2.0 - Người 4] Timer + chọn độ khó AI
+    private JLabel timerLabel;
+    private JComboBox<AIDifficulty> difficultyComboBox;
+
+
     public ConnectFourView(int rows, int cols) {
         this.rows = rows;
         this.cols = cols;
@@ -32,7 +38,11 @@ public class ConnectFourView extends JFrame {
         this.resetButton = new JButton("Reset");
         this.setLayout(new BorderLayout(8, 8));
 
+
         // [v2.0 - Người 5] Khởi tạo các nút mới
+        this.timerLabel = new JLabel("⏱ 30s");
+        this.difficultyComboBox = new JComboBox<>(AIDifficulty.values());
+        this.difficultyComboBox.setSelectedItem(AIDifficulty.HARD);
         this.hintButton = new JButton("💡 Hint");
         this.saveButton = new JButton("💾 Save");
         this.loadButton = new JButton("📂 Load");
@@ -62,18 +72,30 @@ public class ConnectFourView extends JFrame {
             this.setBorder(new EmptyBorder(12, 12, 8, 12));
 
             GameModeTitle = new JLabel("Người vs Người", SwingConstants.CENTER);
-            GameModeTitle.setFont(new Font("Arial",Font.BOLD, 24));
+            GameModeTitle.setFont(new Font("Arial", Font.BOLD, 24));
             add(GameModeTitle, BorderLayout.CENTER);
 
+            // Phải: ComboBox chế độ chơi + cấp độ AI
+            JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
             modeComboBox = new JComboBox<>(GameMode.values());
-            modeComboBox.setFont(new Font("Arial",Font.BOLD, 12));
+            modeComboBox.setFont(new Font("Arial", Font.BOLD, 12));
             modeComboBox.setFocusable(false);
             modeComboBox.setBackground(Color.WHITE);
-            add(modeComboBox, BorderLayout.EAST);
+            rightPanel.add(modeComboBox);
 
-            JPanel leftSpace = new JPanel();
-            leftSpace.setPreferredSize(modeComboBox.getPreferredSize());
-            add(leftSpace, BorderLayout.WEST);
+            // [v2.0 - Người 4] ComboBox độ khó AI
+            difficultyComboBox.setFont(new Font("Arial", Font.BOLD, 12));
+            difficultyComboBox.setFocusable(false);
+            difficultyComboBox.setBackground(Color.WHITE);
+            rightPanel.add(difficultyComboBox);
+
+            add(rightPanel, BorderLayout.EAST);
+
+            // Trái: timer
+            JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+            timerLabel.setFont(new Font("Arial", Font.BOLD, 16));
+            leftPanel.add(timerLabel);
+            add(leftPanel, BorderLayout.WEST);
         }
     }
 
@@ -172,5 +194,8 @@ public class ConnectFourView extends JFrame {
     public void showMessage(String message) {
         JOptionPane.showMessageDialog(this, message);
     }
-
+    /** [v2.0 - Người 4] Get cấp độ AI đang chọn */
+    public AIDifficulty getSelectedDifficulty() {
+        return (AIDifficulty) this.difficultyComboBox.getSelectedItem();
+    }
 }
