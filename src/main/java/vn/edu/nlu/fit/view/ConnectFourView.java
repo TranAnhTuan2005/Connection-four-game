@@ -2,14 +2,14 @@
  * @file    ConnectFourView.java
  * @package vn.edu.nlu.fit.view
  * @desc    JFrame chính của game.
- *          THAY ĐỔI v2.0:
- *          - Người 1: scoreLabel + highlightWinningCells()
- *          - Người 2: undoButton + PieceDropAnimator
- *          - Người 3: themeButton + soundCheckBox + applyTheme()
- *          - Người 4: timerLabel + difficultyComboBox
- *          - Người 5: hintButton + saveButton + loadButton + highlightColumn()
+ * THAY ĐỔI v2.0:
+ * - Người 1: scoreLabel + highlightWinningCells()
+ * - Người 2: undoButton + PieceDropAnimator
+ * - Người 3: themeButton + soundCheckBox + applyTheme()
+ * - Người 4: timerLabel + difficultyComboBox
+ * - Người 5: hintButton + saveButton + loadButton + highlightColumn()
  * @history v1.0 - Tạo mới
- *          v2.0 2026-06-01 - Tích hợp tất cả tính năng mở rộng
+ * v2.0 2026-06-01 - Tích hợp tất cả tính năng mở rộng
  */
 package vn.edu.nlu.fit.view;
 
@@ -19,6 +19,7 @@ import vn.edu.nlu.fit.enums.GameMode;
 import vn.edu.nlu.fit.model.Player;
 import vn.edu.nlu.fit.model.WinningCells;
 
+import javax.swing.Timer;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -37,6 +38,15 @@ public class ConnectFourView extends JFrame {
     private final JLabel statusLabel;
     private final JButton resetButton;
 
+    // [v2.0 - Người 5] Nút Hint, Save, Load
+    private JButton hintButton;
+    private JButton saveButton;
+    private JButton loadButton;
+
+    // [v2.0 - Người 4] Timer + chọn độ khó AI
+    private JLabel timerLabel;
+    private JComboBox<AIDifficulty> difficultyComboBox;
+
     // [v2.0 - Người 1] Hiển thị điểm thắng/thua
     private JLabel scoreLabel;
 
@@ -49,15 +59,6 @@ public class ConnectFourView extends JFrame {
     private JCheckBox soundCheckBox;
     private ThemeManager themeManager;
 
-    // [v2.0 - Người 4] Timer + chọn độ khó AI
-    private JLabel timerLabel;
-    private JComboBox<AIDifficulty> difficultyComboBox;
-
-    // [v2.0 - Người 5] Nút Hint, Save, Load
-    private JButton hintButton;
-    private JButton saveButton;
-    private JButton loadButton;
-
     // [v2.0 - Người 1] Timer nhấp nháy ô thắng
     private Timer blinkTimer;
 
@@ -69,7 +70,7 @@ public class ConnectFourView extends JFrame {
         this.statusLabel = new JLabel("Lượt: Người chơi 1 (Đỏ)");
         this.resetButton = new JButton("Reset");
 
-        // [v2.0] Khởi tạo các thành phần mới
+        // [v2.0] Khởi tạo các thành phần mới từ các thành viên
         this.scoreLabel = new JLabel("Đỏ 0 - 0 Vàng  |  Hòa: 0");
         this.undoButton = new JButton("↶ Undo");
         this.themeButton = new JButton("🌙 Dark");

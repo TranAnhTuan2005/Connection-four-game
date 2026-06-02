@@ -24,6 +24,14 @@ public class AIPlayer extends Player{
         this.heuristic = heuristic;
     }
 
+    /** [v2.0] Đặt độ sâu tìm kiếm — dùng cho AIDifficulty và HintAdvisor */
+    public void setSearchDepth(int depth) {
+        this.searchDepth = Math.max(1, Math.min(depth, MAX_DEPTH));
+    }
+
+    public int getSearchDepth() {
+        return searchDepth;
+    }
 
     @Override
     public boolean isAI() {
