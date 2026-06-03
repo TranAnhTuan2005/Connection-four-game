@@ -1,9 +1,7 @@
 /**
  * @file    ConnectFourController.java
  * @package vn.edu.nlu.fit.controller
- * @author  Trần Anh Tuấn (MSSV: 23130372)
- * @date    2026-05-01
- * @version 1.0
+
  * @desc    Controller trong mô hình MVC — xử lý toàn bộ sự kiện người dùng,
  *          điều phối Model và View.
  *          resetRound()        — UC2c  bước 2.1.2 → 2.1.5
@@ -20,13 +18,24 @@ import vn.edu.nlu.fit.enums.GameMode;
 import vn.edu.nlu.fit.heuristic.ConnectFourHeuristic;
 import vn.edu.nlu.fit.model.*;
 import vn.edu.nlu.fit.view.ConnectFourView;
+import vn.edu.nlu.fit.controller.HintAdvisor;
+import vn.edu.nlu.fit.model.Board;
+import vn.edu.nlu.fit.model.HumanPlayer;
+import vn.edu.nlu.fit.persistence.GameSerializer;
 
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.Color;
+import java.io.File;
+import java.io.IOException;
 import java.awt.*;
 
 public class ConnectFourController {
 
     private final ConnectFourGame model;
     private final ConnectFourView view;
+    // [v2.0 - Người 5] Service gợi ý nước đi
+    private final HintAdvisor hintAdvisor;
 
     // UC2 – Bước 2.1.0: Lưu chế độ chơi hiện tại (PVP hoặc PVE)
     private GameMode currentMode;
@@ -41,7 +50,8 @@ public class ConnectFourController {
     public ConnectFourController(ConnectFourGame model, ConnectFourView view) {
         this.model = model;
         this.view = view;
-
+        // [v2.0 - Người 5] Khởi tạo HintAdvisor
+        this.hintAdvisor = new HintAdvisor();
         // UC2a – Bước 2.1.0: Chế độ mặc định là PVP
         this.currentMode = GameMode.PVP;
         startPvP();
@@ -69,6 +79,11 @@ public class ConnectFourController {
 
         // UC2c – Bước 2.1.2: Nút Reset sẽ gọi resetRound()
         view.getResetButton().addActionListener(e -> resetRound());
+
+        // [v2.0 - Người 5] Đăng ký listener cho 3 nút mới
+        view.getHintButton().addActionListener(e -> handleHint());
+        view.getSaveButton().addActionListener(e -> handleSave());
+        view.getLoadButton().addActionListener(e -> handleLoad());
     }
 
     /**
@@ -268,5 +283,103 @@ public class ConnectFourController {
         }
         // UC2c – Bước 2.1.4: Repaint để hiển thị toàn bộ thay đổi cùng lúc
         view.repaint();
+    }
+
+
+
+    // ========================================================================
+    // [v2.0 - Người 5] HINT + SAVE + LOAD
+    // ========================================================================
+
+    /**
+     * Xử lý khi người dùng nhấn nút Hint.
+     * Tìm cột tốt nhất theo phân tích AI và highlight cột đó.
+     */
+    private void handleHint() {
+        if (model.isGameOver()) {
+            view.showMessage("Game đã kết thúc!");
+            return;
+        }
+
+        int suggestedCol = hintAdvisor.suggestColumn(model);
+        if (suggestedCol < 0) {
+            view.showMessage("Không tìm được nước đi gợi ý!");
+            return;
+        }
+
+        view.highlightColumn(suggestedCol);
+    }
+
+    /**
+     * Xử lý khi người dùng nhấn nút Save.
+     * Mở JFileChooser cho người dùng chọn vị trí lưu file .cf4.
+     */
+    private void handleSave() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileFilter(new FileNameExtensionFilter("Connect Four Save (*.cf4)", "cf4"));
+        chooser.setSelectedFile(new File("connectfour_save.cf4"));
+
+        if (chooser.showSaveDialog(view) == JFileChooser.APPROVE_OPTION) {
+            String path = chooser.getSelectedFile().getAbsolutePath();
+            // Đảm bảo file có extension .cf4
+            if (!path.endsWith(".cf4")) {
+                path += ".cf4";
+            }
+
+            try {
+                GameSerializer.save(model, path);
+                view.showMessage("Đã lưu ván chơi vào:\n" + path);
+            } catch (IOException ex) {
+                view.showMessage("Lỗi khi lưu: " + ex.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Xử lý khi người dùng nhấn nút Load.
+     * Mở JFileChooser cho người dùng chọn file .cf4 để khôi phục ván chơi.
+     */
+    private void handleLoad() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileFilter(new FileNameExtensionFilter("Connect Four Save (*.cf4)", "cf4"));
+
+        if (chooser.showOpenDialog(view) == JFileChooser.APPROVE_OPTION) {
+            String path = chooser.getSelectedFile().getAbsolutePath();
+
+            try {
+                // Reset model trước khi load
+                model.reset();
+                GameSerializer.load(model, path);
+
+                // Vẽ lại toàn bộ bàn cờ từ trạng thái model
+                refreshBoardFromModel();
+
+                updateStatusLabel();
+                view.showMessage("Đã tải ván chơi từ:\n" + path);
+            } catch (IOException ex) {
+                view.showMessage("Lỗi khi tải: " + ex.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Vẽ lại toàn bộ bàn cờ từ trạng thái model (dùng sau khi load).
+     * Tạo các HumanPlayer tạm thời chỉ để có màu hiển thị đúng.
+     */
+    private void refreshBoardFromModel() {
+        Board board = model.getBoard();
+
+        for (int r = 0; r < model.getRows(); r++) {
+            for (int c = 0; c < model.getCols(); c++) {
+                int v = board.getCell(r, c);
+                Player owner = null;
+                if (v == 1) {
+                    owner = new HumanPlayer(1, "P1", new Color(220, 40, 40));   // đỏ
+                } else if (v == 2) {
+                    owner = new HumanPlayer(2, "P2", new Color(255, 210, 25));  // vàng
+                }
+                view.updateCell(r, c, owner);
+            }
+        }
     }
 }
