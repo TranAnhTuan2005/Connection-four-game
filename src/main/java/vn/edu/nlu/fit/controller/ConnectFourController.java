@@ -16,6 +16,7 @@
  */
 package vn.edu.nlu.fit.controller;
 
+import vn.edu.nlu.fit.audio.SoundManager;
 import vn.edu.nlu.fit.enums.GameMode;
 import vn.edu.nlu.fit.heuristic.ConnectFourHeuristic;
 import vn.edu.nlu.fit.model.*;
@@ -69,6 +70,16 @@ public class ConnectFourController {
 
         // UC2c – Bước 2.1.2: Nút Reset sẽ gọi resetRound()
         view.getResetButton().addActionListener(e -> resetRound());
+        view.getThemeButton().addActionListener(e -> handleThemeToggle());
+        view.getSoundCheckBox().addActionListener(e -> {
+            SoundManager.setEnabled(view.getSoundCheckBox().isSelected());
+        });
+    }
+
+    private void handleThemeToggle() {
+        view.getThemeManager().toggle();
+        view.applyTheme();
+        SoundManager.playClick();
     }
 
     /**
@@ -126,7 +137,8 @@ public class ConnectFourController {
             // UC4.1 – Bước 4.1.1.3 → 4.1.1.4: Người chơi đóng hộp thoại,
             //         trạng thái bàn cờ và lượt chơi không thay đổi
         }
-
+        // phat am thanh tha quan
+        SoundManager.playDrop();
         // UC4 – Bước 4.1.6: Cột hợp lệ → view.updateCell() vẽ lại ô với màu quân
         view.updateCell(move.getRow(), move.getCol(), move.getPlayer());
 
@@ -178,7 +190,9 @@ public class ConnectFourController {
     public void handleWin(Player winner) {
         String message = winner.getName() + " thắng!";
         view.updateStatus("Game kết thúc: " + message);
+        SoundManager.playWin();
         view.showMessage(message);
+
     }
 
     /**
@@ -187,7 +201,9 @@ public class ConnectFourController {
     public void handleDraw() {
         String message = "Hòa! Bàn cờ đầy.";
         view.updateStatus(message);
+        SoundManager.playDraw();
         view.showMessage(message);
+
     }
 
     /**
