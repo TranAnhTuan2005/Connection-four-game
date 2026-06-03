@@ -1,3 +1,11 @@
+/**
+ * @file    CellPanel.java
+ * @package vn.edu.nlu.fit.view
+ * @desc    Ô cờ trên bàn chơi Connect Four.
+ *          THAY ĐỔI v2.0: Highlight nhấp nháy khi là ô thắng (Người 1).
+ * @history v1.0 - Tạo mới
+ *          v2.0 2026-06-01 - Thêm highlight ô thắng + nhấp nháy
+ */
 package vn.edu.nlu.fit.view;
 
 import vn.edu.nlu.fit.model.Player;
@@ -5,74 +13,47 @@ import vn.edu.nlu.fit.model.Player;
 import javax.swing.*;
 import java.awt.*;
 
-import vn.edu.nlu.fit.model.Player;
-
 import static vn.edu.nlu.fit.view.ConnectFourView.themeColor;
 
-/**
- * Lớp CellPanel đại diện cho một ô cờ trên bàn chơi Connect Four.
- *
- * Chức năng:
- * - Hiển thị quân cờ của người chơi
- * - Vẽ giao diện hình tròn cho từng ô
- * - Cập nhật màu quân cờ theo Player
- */
 public class CellPanel extends JPanel {
 
-    // Người chơi hiện tại sở hữu ô cờ
     private Player player;
-    // [v2.0 - Thanh Tú] Đánh dấu nếu ô này thuộc đường thắng
+
+    // [v2.0 - Người 1] Đánh dấu nếu ô này thuộc đường thắng
     private boolean isWinning = false;
 
-    // [v2.0 - Thanh Tú] Trạng thái nhấp nháy (toggle bởi Timer ngoài)
+    // [v2.0 - Người 1] Trạng thái nhấp nháy (toggle bởi Timer ngoài)
     private boolean blinkOn = true;
-    /**
-     * Constructor khởi tạo ô cờ
-     */
+
     public CellPanel() {
-
-        // Thiết lập kích thước mặc định của ô cờ
         this.setPreferredSize(new Dimension(90, 90));
-
-        // Thiết lập màu nền theo theme của game
         this.setBackground(themeColor);
-
-        // Cho phép hiển thị nền
         this.setOpaque(true);
     }
 
-    /**
-     * Cập nhật người chơi cho ô cờ
-     * Sau khi cập nhật sẽ vẽ lại giao diện
-     * @param player người chơi sở hữu quân cờ
-     */
     public void setPlayer(Player player) {
-
         this.player = player;
-
-        // Yêu cầu Swing vẽ lại component
         repaint();
     }
 
-    /**
-     * Phương thức dùng để vẽ giao diện ô cờ
-     * @param g đối tượng Graphics dùng để vẽ
-     */
-    /** [v2.0 - Thanh Tú] Đặt cờ này là ô thắng (để highlight) */
+    /** [v2.0 - Người 1] Đặt cờ này là ô thắng (để highlight) */
     public void setWinning(boolean winning) {
         this.isWinning = winning;
         repaint();
     }
-    /** [v2.0 - Thanh Tú] Toggle nhấp nháy - gọi từ Timer trong View */
+
+    /** [v2.0 - Người 1] Toggle nhấp nháy - gọi từ Timer trong View */
     public void toggleBlink() {
         if (isWinning) {
             blinkOn = !blinkOn;
             repaint();
         }
     }
+
     public boolean isWinning() {
         return isWinning;
     }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
