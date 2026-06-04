@@ -9,6 +9,8 @@ public class ConnectFourGame {
     private GameState gameState;
     private WinChecker winChecker;
     private int rows, cols;
+    // [update - Thanh Tú] Quản lý điểm số qua nhiều ván
+    private ScoreManager scoreManager;
 
     public ConnectFourGame(int rows, int cols, WinChecker winChecker) {
         this.rows = rows;
@@ -17,7 +19,7 @@ public class ConnectFourGame {
         this.playerManager = new PlayerManager();
         this.gameState = new GameState();
         this.winChecker = winChecker;
-
+        this.scoreManager = new ScoreManager();// [update - Thanh Tú]
     }
 
     public void setPlayers(Player player1, Player player2){
@@ -38,17 +40,24 @@ public class ConnectFourGame {
         Player currentPlayer = playerManager.getCurrentPlayer();
         board.setCell(row, col, currentPlayer.getId());
 
+        Move move = new Move(row, col, currentPlayer);
+
+
         if (winChecker.checkWin(board, row, col, currentPlayer.getId())) {
             gameState.setWinner(currentPlayer);
+            // [update_ Tú] Cộng điểm cho người thắng
+            scoreManager.addWin(currentPlayer);
 
         } else if (board.isFull()) {
             gameState.setDraw();
+            // [update_ Tú] Cộng đếm ván hòa
+            scoreManager.addDraw();
 
         } else {
             playerManager.switchToNextPlayer();
         }
 
-        return new Move(row, col, currentPlayer);
+        return move;
     }
 
     public void reset() {
