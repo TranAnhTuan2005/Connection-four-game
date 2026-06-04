@@ -1,19 +1,19 @@
 /**
  * @file    ConnectFourController.java
  * @package vn.edu.nlu.fit.controller
-
  * @desc    Controller trong mô hình MVC — xử lý toàn bộ sự kiện người dùng,
- *          điều phối Model và View.
- *          resetRound()        — UC2c  bước 2.1.2 → 2.1.5
- *          startPvP()          — UC2a  bước 2.2.2
- *          startPvE()          — UC2b  bước 2.2.2
- *          handleComboBoxAction()— UC2  bước 2.2.1 → 2.2.3
- *          handleColumnClick() — UC4   bước 4.1.2 → 4.1.7
- *                                UC4.1 bước 4.1.1.1 → 4.1.1.4
+ * điều phối Model và View.
+ * resetRound()        — UC2c  bước 2.1.2 → 2.1.5
+ * startPvP()          — UC2a  bước 2.2.2
+ * startPvE()          — UC2b  bước 2.2.2
+ * handleComboBoxAction()— UC2  bước 2.2.1 → 2.2.3
+ * handleColumnClick() — UC4   bước 4.1.2 → 4.1.7
+ * UC4.1 bước 4.1.1.1 → 4.1.1.4
  * @history v1.0 2026-05-01 – Tạo mới
  */
 package vn.edu.nlu.fit.controller;
 
+import vn.edu.nlu.fit.audio.SoundManager;
 import vn.edu.nlu.fit.enums.GameMode;
 import vn.edu.nlu.fit.heuristic.ConnectFourHeuristic;
 import vn.edu.nlu.fit.model.*;
@@ -42,7 +42,7 @@ public class ConnectFourController {
 
     /**
      * UC2  – Bước 2.1.0: Constructor khởi tạo Controller, kết nối Model và View.
-     *         Mặc định chế độ PVP, gọi startPvP() và resetRound() ngay sau khi tạo.
+     * Mặc định chế độ PVP, gọi startPvP() và resetRound() ngay sau khi tạo.
      *
      * @param model  ConnectFourGame — Model quản lý logic game
      * @param view   ConnectFourView — View hiển thị giao diện
@@ -63,9 +63,9 @@ public class ConnectFourController {
 
     /**
      * UC2  – Bước 2.1.1: Đăng ký ActionListener cho tất cả các nút tương tác.
-     *         - 7 nút cột (DropPanel) → handleColumnClick(col)  [UC4 bước 4.1.1]
-     *         - ComboBox chế độ chơi  → handleComboBoxAction()  [UC2 bước 2.2.1]
-     *         - Nút Reset             → resetRound()            [UC2c bước 2.1.2]
+     * - 7 nút cột (DropPanel) → handleColumnClick(col)  [UC4 bước 4.1.1]
+     * - ComboBox chế độ chơi  → handleComboBoxAction()  [UC2 bước 2.2.1]
+     * - Nút Reset             → resetRound()            [UC2c bước 2.1.2]
      */
     public void addButtonAction() {
         // UC4 – Bước 4.1.1: Mỗi nút cột khi nhấn sẽ gọi handleColumnClick(col)
@@ -80,15 +80,30 @@ public class ConnectFourController {
         // UC2c – Bước 2.1.2: Nút Reset sẽ gọi resetRound()
         view.getResetButton().addActionListener(e -> resetRound());
 
-        // [v2.0 - Người 5] Đăng ký listener cho 3 nút mới
+        // [Nhánh Tin-new] Đăng ký lắng nghe sự kiện đổi Theme và Âm thanh
+        view.getThemeButton().addActionListener(e -> handleThemeToggle());
+        view.getSoundCheckBox().addActionListener(e -> {
+            SoundManager.setEnabled(view.getSoundCheckBox().isSelected());
+        });
+
+        // [Nhánh main] Đăng ký lắng nghe sự kiện cho 3 nút: Gợi ý, Lưu, Tải ván chơi
         view.getHintButton().addActionListener(e -> handleHint());
         view.getSaveButton().addActionListener(e -> handleSave());
         view.getLoadButton().addActionListener(e -> handleLoad());
     }
 
     /**
+     * Xử lý chuyển đổi giao diện Sáng / Tối và phát âm thanh phản hồi
+     */
+    private void handleThemeToggle() {
+        view.getThemeManager().toggle();
+        view.applyTheme();
+        SoundManager.playClick();
+    }
+
+    /**
      * UC2  – Bước 2.2.1 → 2.2.3: Xử lý khi người chơi thay đổi chế độ trên ComboBox.
-     *         Gọi startPvP() hoặc startPvE() tương ứng, sau đó tự động resetRound().
+     * Gọi startPvP() hoặc startPvE() tương ứng, sau đó tự động resetRound().
      *
      * @param mode  GameMode.PVP hoặc GameMode.PVE
      */
@@ -141,7 +156,8 @@ public class ConnectFourController {
             // UC4.1 – Bước 4.1.1.3 → 4.1.1.4: Người chơi đóng hộp thoại,
             //         trạng thái bàn cờ và lượt chơi không thay đổi
         }
-
+        // phat am thanh tha quan
+        SoundManager.playDrop();
         // UC4 – Bước 4.1.6: Cột hợp lệ → view.updateCell() vẽ lại ô với màu quân
         view.updateCell(move.getRow(), move.getCol(), move.getPlayer());
 
@@ -169,8 +185,8 @@ public class ConnectFourController {
 
     /**
      * UC4 – Bước 4.1.7: Kiểm tra trạng thái game sau mỗi nước đi.
-     *        Nếu có người thắng → handleWin(). Nếu hòa → handleDraw().
-     *        Ngược lại → cập nhật lượt chơi tiếp theo lên statusLabel.
+     * Nếu có người thắng → handleWin(). Nếu hòa → handleDraw().
+     * Ngược lại → cập nhật lượt chơi tiếp theo lên statusLabel.
      */
     public void checkGameState() {
         GameState state = model.getGameState();
@@ -193,6 +209,7 @@ public class ConnectFourController {
     public void handleWin(Player winner) {
         String message = winner.getName() + " thắng!";
         view.updateStatus("Game kết thúc: " + message);
+        SoundManager.playWin();
         view.showMessage(message);
     }
 
@@ -202,13 +219,14 @@ public class ConnectFourController {
     public void handleDraw() {
         String message = "Hòa! Bàn cờ đầy.";
         view.updateStatus(message);
+        SoundManager.playDraw();
         view.showMessage(message);
     }
 
     /**
      * UC2c – Bước 2.1.2 → 2.1.5: Reset toàn bộ ván chơi về trạng thái ban đầu.
-     *         Được gọi khi người dùng nhấn nút Reset (addButtonAction)
-     *         hoặc sau khi đổi chế độ (handleComboBoxAction → resetRound).
+     * Được gọi khi người dùng nhấn nút Reset (addButtonAction)
+     * hoặc sau khi đổi chế độ (handleComboBoxAction → resetRound).
      */
     public void resetRound() {
         // UC2c – Bước 2.1.3: ConnectFourGame.reset() xóa Board, đặt lại GameState
@@ -223,9 +241,9 @@ public class ConnectFourController {
 
     /**
      * UC2a – Bước 2.2.2: Khởi tạo 2 HumanPlayer cho chế độ PvP.
-     *         player1 = HumanPlayer(id=1, "Người chơi Đỏ",  Color(220,40,40))
-     *         player2 = HumanPlayer(id=2, "Người chơi Vàng", Color(255,210,25))
-     *         Gọi từ: handleComboBoxAction(PVP) → startPvP() → resetRound()
+     * player1 = HumanPlayer(id=1, "Người chơi Đỏ",  Color(220,40,40))
+     * player2 = HumanPlayer(id=2, "Người chơi Vàng", Color(255,210,25))
+     * Gọi từ: handleComboBoxAction(PVP) → startPvP() → resetRound()
      */
     public void startPvP() {
         // UC2a – Bước 2.2.2: Tạo player1 = HumanPlayer (màu đỏ)
@@ -240,9 +258,9 @@ public class ConnectFourController {
 
     /**
      * UC2b – Bước 2.2.2: Khởi tạo 1 HumanPlayer + 1 AIPlayer cho chế độ PvE.
-     *         human = HumanPlayer(id=1, "Bạn", màu đỏ)
-     *         ai    = AIPlayer(id=2, "Máy", màu vàng, depth=7, ConnectFourHeuristic)
-     *         Gọi từ: handleComboBoxAction(PVE) → startPvE() → resetRound()
+     * human = HumanPlayer(id=1, "Bạn", màu đỏ)
+     * ai    = AIPlayer(id=2, "Máy", màu vàng, depth=7, ConnectFourHeuristic)
+     * Gọi từ: handleComboBoxAction(PVE) → startPvE() → resetRound()
      */
     public void startPvE() {
         // UC2b – Bước 2.2.2: Tạo người chơi thật (Human)
@@ -261,7 +279,7 @@ public class ConnectFourController {
 
     /**
      * UC2c – Bước 2.1.5: Lấy người chơi hiện tại và cập nhật nhãn lượt chơi.
-     *         Gọi view.updateStatus("Lượt: " + currentPlayer.getName()).
+     * Gọi view.updateStatus("Lượt: " + currentPlayer.getName()).
      */
     public void updateStatusLabel() {
         Player currentPlayer = model.getCurrentPlayer();
@@ -271,8 +289,8 @@ public class ConnectFourController {
 
     /**
      * UC2c – Bước 2.1.4: Duyệt toàn bộ 42 ô (6 hàng × 7 cột),
-     *         gọi view.updateCell(r, c, null) để xóa trắng từng ô trên giao diện.
-     *         Sau cùng gọi view.repaint() để vẽ lại toàn bộ bàn cờ.
+     * gọi view.updateCell(r, c, null) để xóa trắng từng ô trên giao diện.
+     * Sau cùng gọi view.repaint() để vẽ lại toàn bộ bàn cờ.
      */
     public void updateAllCells() {
         for (int r = 0; r < model.getRows(); r++) {
@@ -284,8 +302,6 @@ public class ConnectFourController {
         // UC2c – Bước 2.1.4: Repaint để hiển thị toàn bộ thay đổi cùng lúc
         view.repaint();
     }
-
-
 
     // ========================================================================
     // [v2.0 - Người 5] HINT + SAVE + LOAD
