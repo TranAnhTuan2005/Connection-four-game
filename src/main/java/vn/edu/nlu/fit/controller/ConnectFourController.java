@@ -1,17 +1,14 @@
 /**
  * @file    ConnectFourController.java
  * @package vn.edu.nlu.fit.controller
- * @author  Trần Anh Tuấn (MSSV: 23130372)
- * @date    2026-05-01
- * @version 1.0
  * @desc    Controller trong mô hình MVC — xử lý toàn bộ sự kiện người dùng,
- *          điều phối Model và View.
- *          resetRound()        — UC2c  bước 2.1.2 → 2.1.5
- *          startPvP()          — UC2a  bước 2.2.2
- *          startPvE()          — UC2b  bước 2.2.2
- *          handleComboBoxAction()— UC2  bước 2.2.1 → 2.2.3
- *          handleColumnClick() — UC4   bước 4.1.2 → 4.1.7
- *                                UC4.1 bước 4.1.1.1 → 4.1.1.4
+ * điều phối Model và View.
+ * resetRound()        — UC2c  bước 2.1.2 → 2.1.5
+ * startPvP()          — UC2a  bước 2.2.2
+ * startPvE()          — UC2b  bước 2.2.2
+ * handleComboBoxAction()— UC2  bước 2.2.1 → 2.2.3
+ * handleColumnClick() — UC4   bước 4.1.2 → 4.1.7
+ * UC4.1 bước 4.1.1.1 → 4.1.1.4
  * @history v1.0 2026-05-01 – Tạo mới
  */
 package vn.edu.nlu.fit.controller;
@@ -21,20 +18,31 @@ import vn.edu.nlu.fit.enums.GameMode;
 import vn.edu.nlu.fit.heuristic.ConnectFourHeuristic;
 import vn.edu.nlu.fit.model.*;
 import vn.edu.nlu.fit.view.ConnectFourView;
+import vn.edu.nlu.fit.controller.HintAdvisor;
+import vn.edu.nlu.fit.model.Board;
+import vn.edu.nlu.fit.model.HumanPlayer;
+import vn.edu.nlu.fit.persistence.GameSerializer;
 
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.Color;
+import java.io.File;
+import java.io.IOException;
 import java.awt.*;
 
 public class ConnectFourController {
 
     private final ConnectFourGame model;
     private final ConnectFourView view;
+    // [v2.0 - Người 5] Service gợi ý nước đi
+    private final HintAdvisor hintAdvisor;
 
     // UC2 – Bước 2.1.0: Lưu chế độ chơi hiện tại (PVP hoặc PVE)
     private GameMode currentMode;
 
     /**
      * UC2  – Bước 2.1.0: Constructor khởi tạo Controller, kết nối Model và View.
-     *         Mặc định chế độ PVP, gọi startPvP() và resetRound() ngay sau khi tạo.
+     * Mặc định chế độ PVP, gọi startPvP() và resetRound() ngay sau khi tạo.
      *
      * @param model  ConnectFourGame — Model quản lý logic game
      * @param view   ConnectFourView — View hiển thị giao diện
@@ -42,7 +50,8 @@ public class ConnectFourController {
     public ConnectFourController(ConnectFourGame model, ConnectFourView view) {
         this.model = model;
         this.view = view;
-
+        // [v2.0 - Người 5] Khởi tạo HintAdvisor
+        this.hintAdvisor = new HintAdvisor();
         // UC2a – Bước 2.1.0: Chế độ mặc định là PVP
         this.currentMode = GameMode.PVP;
         startPvP();
@@ -54,9 +63,9 @@ public class ConnectFourController {
 
     /**
      * UC2  – Bước 2.1.1: Đăng ký ActionListener cho tất cả các nút tương tác.
-     *         - 7 nút cột (DropPanel) → handleColumnClick(col)  [UC4 bước 4.1.1]
-     *         - ComboBox chế độ chơi  → handleComboBoxAction()  [UC2 bước 2.2.1]
-     *         - Nút Reset             → resetRound()            [UC2c bước 2.1.2]
+     * - 7 nút cột (DropPanel) → handleColumnClick(col)  [UC4 bước 4.1.1]
+     * - ComboBox chế độ chơi  → handleComboBoxAction()  [UC2 bước 2.2.1]
+     * - Nút Reset             → resetRound()            [UC2c bước 2.1.2]
      */
     public void addButtonAction() {
         // UC4 – Bước 4.1.1: Mỗi nút cột khi nhấn sẽ gọi handleColumnClick(col)
@@ -70,12 +79,22 @@ public class ConnectFourController {
 
         // UC2c – Bước 2.1.2: Nút Reset sẽ gọi resetRound()
         view.getResetButton().addActionListener(e -> resetRound());
+
+        // [Nhánh Tin-new] Đăng ký lắng nghe sự kiện đổi Theme và Âm thanh
         view.getThemeButton().addActionListener(e -> handleThemeToggle());
         view.getSoundCheckBox().addActionListener(e -> {
             SoundManager.setEnabled(view.getSoundCheckBox().isSelected());
         });
+
+        // [Nhánh main] Đăng ký lắng nghe sự kiện cho 3 nút: Gợi ý, Lưu, Tải ván chơi
+        view.getHintButton().addActionListener(e -> handleHint());
+        view.getSaveButton().addActionListener(e -> handleSave());
+        view.getLoadButton().addActionListener(e -> handleLoad());
     }
 
+    /**
+     * Xử lý chuyển đổi giao diện Sáng / Tối và phát âm thanh phản hồi
+     */
     private void handleThemeToggle() {
         view.getThemeManager().toggle();
         view.applyTheme();
@@ -84,7 +103,7 @@ public class ConnectFourController {
 
     /**
      * UC2  – Bước 2.2.1 → 2.2.3: Xử lý khi người chơi thay đổi chế độ trên ComboBox.
-     *         Gọi startPvP() hoặc startPvE() tương ứng, sau đó tự động resetRound().
+     * Gọi startPvP() hoặc startPvE() tương ứng, sau đó tự động resetRound().
      *
      * @param mode  GameMode.PVP hoặc GameMode.PVE
      */
@@ -166,8 +185,8 @@ public class ConnectFourController {
 
     /**
      * UC4 – Bước 4.1.7: Kiểm tra trạng thái game sau mỗi nước đi.
-     *        Nếu có người thắng → handleWin(). Nếu hòa → handleDraw().
-     *        Ngược lại → cập nhật lượt chơi tiếp theo lên statusLabel.
+     * Nếu có người thắng → handleWin(). Nếu hòa → handleDraw().
+     * Ngược lại → cập nhật lượt chơi tiếp theo lên statusLabel.
      */
     public void checkGameState() {
         GameState state = model.getGameState();
@@ -192,7 +211,6 @@ public class ConnectFourController {
         view.updateStatus("Game kết thúc: " + message);
         SoundManager.playWin();
         view.showMessage(message);
-
     }
 
     /**
@@ -203,13 +221,12 @@ public class ConnectFourController {
         view.updateStatus(message);
         SoundManager.playDraw();
         view.showMessage(message);
-
     }
 
     /**
      * UC2c – Bước 2.1.2 → 2.1.5: Reset toàn bộ ván chơi về trạng thái ban đầu.
-     *         Được gọi khi người dùng nhấn nút Reset (addButtonAction)
-     *         hoặc sau khi đổi chế độ (handleComboBoxAction → resetRound).
+     * Được gọi khi người dùng nhấn nút Reset (addButtonAction)
+     * hoặc sau khi đổi chế độ (handleComboBoxAction → resetRound).
      */
     public void resetRound() {
         // UC2c – Bước 2.1.3: ConnectFourGame.reset() xóa Board, đặt lại GameState
@@ -224,9 +241,9 @@ public class ConnectFourController {
 
     /**
      * UC2a – Bước 2.2.2: Khởi tạo 2 HumanPlayer cho chế độ PvP.
-     *         player1 = HumanPlayer(id=1, "Người chơi Đỏ",  Color(220,40,40))
-     *         player2 = HumanPlayer(id=2, "Người chơi Vàng", Color(255,210,25))
-     *         Gọi từ: handleComboBoxAction(PVP) → startPvP() → resetRound()
+     * player1 = HumanPlayer(id=1, "Người chơi Đỏ",  Color(220,40,40))
+     * player2 = HumanPlayer(id=2, "Người chơi Vàng", Color(255,210,25))
+     * Gọi từ: handleComboBoxAction(PVP) → startPvP() → resetRound()
      */
     public void startPvP() {
         // UC2a – Bước 2.2.2: Tạo player1 = HumanPlayer (màu đỏ)
@@ -241,9 +258,9 @@ public class ConnectFourController {
 
     /**
      * UC2b – Bước 2.2.2: Khởi tạo 1 HumanPlayer + 1 AIPlayer cho chế độ PvE.
-     *         human = HumanPlayer(id=1, "Bạn", màu đỏ)
-     *         ai    = AIPlayer(id=2, "Máy", màu vàng, depth=7, ConnectFourHeuristic)
-     *         Gọi từ: handleComboBoxAction(PVE) → startPvE() → resetRound()
+     * human = HumanPlayer(id=1, "Bạn", màu đỏ)
+     * ai    = AIPlayer(id=2, "Máy", màu vàng, depth=7, ConnectFourHeuristic)
+     * Gọi từ: handleComboBoxAction(PVE) → startPvE() → resetRound()
      */
     public void startPvE() {
         // UC2b – Bước 2.2.2: Tạo người chơi thật (Human)
@@ -262,7 +279,7 @@ public class ConnectFourController {
 
     /**
      * UC2c – Bước 2.1.5: Lấy người chơi hiện tại và cập nhật nhãn lượt chơi.
-     *         Gọi view.updateStatus("Lượt: " + currentPlayer.getName()).
+     * Gọi view.updateStatus("Lượt: " + currentPlayer.getName()).
      */
     public void updateStatusLabel() {
         Player currentPlayer = model.getCurrentPlayer();
@@ -272,8 +289,8 @@ public class ConnectFourController {
 
     /**
      * UC2c – Bước 2.1.4: Duyệt toàn bộ 42 ô (6 hàng × 7 cột),
-     *         gọi view.updateCell(r, c, null) để xóa trắng từng ô trên giao diện.
-     *         Sau cùng gọi view.repaint() để vẽ lại toàn bộ bàn cờ.
+     * gọi view.updateCell(r, c, null) để xóa trắng từng ô trên giao diện.
+     * Sau cùng gọi view.repaint() để vẽ lại toàn bộ bàn cờ.
      */
     public void updateAllCells() {
         for (int r = 0; r < model.getRows(); r++) {
@@ -284,5 +301,101 @@ public class ConnectFourController {
         }
         // UC2c – Bước 2.1.4: Repaint để hiển thị toàn bộ thay đổi cùng lúc
         view.repaint();
+    }
+
+    // ========================================================================
+    // [v2.0 - Người 5] HINT + SAVE + LOAD
+    // ========================================================================
+
+    /**
+     * Xử lý khi người dùng nhấn nút Hint.
+     * Tìm cột tốt nhất theo phân tích AI và highlight cột đó.
+     */
+    private void handleHint() {
+        if (model.isGameOver()) {
+            view.showMessage("Game đã kết thúc!");
+            return;
+        }
+
+        int suggestedCol = hintAdvisor.suggestColumn(model);
+        if (suggestedCol < 0) {
+            view.showMessage("Không tìm được nước đi gợi ý!");
+            return;
+        }
+
+        view.highlightColumn(suggestedCol);
+    }
+
+    /**
+     * Xử lý khi người dùng nhấn nút Save.
+     * Mở JFileChooser cho người dùng chọn vị trí lưu file .cf4.
+     */
+    private void handleSave() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileFilter(new FileNameExtensionFilter("Connect Four Save (*.cf4)", "cf4"));
+        chooser.setSelectedFile(new File("connectfour_save.cf4"));
+
+        if (chooser.showSaveDialog(view) == JFileChooser.APPROVE_OPTION) {
+            String path = chooser.getSelectedFile().getAbsolutePath();
+            // Đảm bảo file có extension .cf4
+            if (!path.endsWith(".cf4")) {
+                path += ".cf4";
+            }
+
+            try {
+                GameSerializer.save(model, path);
+                view.showMessage("Đã lưu ván chơi vào:\n" + path);
+            } catch (IOException ex) {
+                view.showMessage("Lỗi khi lưu: " + ex.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Xử lý khi người dùng nhấn nút Load.
+     * Mở JFileChooser cho người dùng chọn file .cf4 để khôi phục ván chơi.
+     */
+    private void handleLoad() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileFilter(new FileNameExtensionFilter("Connect Four Save (*.cf4)", "cf4"));
+
+        if (chooser.showOpenDialog(view) == JFileChooser.APPROVE_OPTION) {
+            String path = chooser.getSelectedFile().getAbsolutePath();
+
+            try {
+                // Reset model trước khi load
+                model.reset();
+                GameSerializer.load(model, path);
+
+                // Vẽ lại toàn bộ bàn cờ từ trạng thái model
+                refreshBoardFromModel();
+
+                updateStatusLabel();
+                view.showMessage("Đã tải ván chơi từ:\n" + path);
+            } catch (IOException ex) {
+                view.showMessage("Lỗi khi tải: " + ex.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Vẽ lại toàn bộ bàn cờ từ trạng thái model (dùng sau khi load).
+     * Tạo các HumanPlayer tạm thời chỉ để có màu hiển thị đúng.
+     */
+    private void refreshBoardFromModel() {
+        Board board = model.getBoard();
+
+        for (int r = 0; r < model.getRows(); r++) {
+            for (int c = 0; c < model.getCols(); c++) {
+                int v = board.getCell(r, c);
+                Player owner = null;
+                if (v == 1) {
+                    owner = new HumanPlayer(1, "P1", new Color(220, 40, 40));   // đỏ
+                } else if (v == 2) {
+                    owner = new HumanPlayer(2, "P2", new Color(255, 210, 25));  // vàng
+                }
+                view.updateCell(r, c, owner);
+            }
+        }
     }
 }
