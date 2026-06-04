@@ -22,6 +22,7 @@ import vn.edu.nlu.fit.controller.HintAdvisor;
 import vn.edu.nlu.fit.model.Board;
 import vn.edu.nlu.fit.model.HumanPlayer;
 import vn.edu.nlu.fit.persistence.GameSerializer;
+import vn.edu.nlu.fit.view.TurnTimer;
 
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -39,6 +40,8 @@ public class ConnectFourController {
 
     // UC2 – Bước 2.1.0: Lưu chế độ chơi hiện tại (PVP hoặc PVE)
     private GameMode currentMode;
+    //  Timer đếm ngược lượt đi
+    private TurnTimer turnTimer;
 
     /**
      * UC2  – Bước 2.1.0: Constructor khởi tạo Controller, kết nối Model và View.
@@ -56,9 +59,17 @@ public class ConnectFourController {
         this.currentMode = GameMode.PVP;
         startPvP();
         updateStatusLabel();
-
+        // Khởi tạo turn timer với callback timeout
+        this.turnTimer = new TurnTimer(view.getTimerLabel(), this::handleTurnTimeout);
         // UC2  – Bước 2.1.1: Đăng ký ActionListener cho nút Reset, ComboBox và các nút cột
         this.addButtonAction();
+
+        //Bắt đầu đếm ngược cho lượt đầu tiên
+        this.turnTimer.start();
+    }
+    /** Callback khi hết giờ - người chơi hiện tại thua */
+    private void handleTurnTimeout() {
+        //
     }
 
     /**
@@ -156,8 +167,15 @@ public class ConnectFourController {
             // UC4.1 – Bước 4.1.1.3 → 4.1.1.4: Người chơi đóng hộp thoại,
             //         trạng thái bàn cờ và lượt chơi không thay đổi
         }
+
+
+
         // phat am thanh tha quan
         SoundManager.playDrop();
+
+        //Dừng timer (sẽ start lại sau animation)
+        turnTimer.stop();
+
         // UC4 – Bước 4.1.6: Cột hợp lệ → view.updateCell() vẽ lại ô với màu quân
         view.updateCell(move.getRow(), move.getCol(), move.getPlayer());
 
@@ -191,6 +209,8 @@ public class ConnectFourController {
     public void checkGameState() {
         GameState state = model.getGameState();
         if (state.isGameOver()) {
+            // Dừng timer khi game kết thúc
+            turnTimer.stop();
             if (state.getWinner() != null) {
                 handleWin(state.getWinner());       // Có người thắng
             } else if (state.isDraw()) {
