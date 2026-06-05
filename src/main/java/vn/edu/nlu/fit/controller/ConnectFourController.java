@@ -59,6 +59,7 @@ public class ConnectFourController {
         this.currentMode = GameMode.PVP;
         startPvP();
         updateStatusLabel();
+        updateScoreLabel();
         // Khởi tạo turn timer với callback timeout
         this.turnTimer = new TurnTimer(view.getTimerLabel(), this::handleTurnTimeout);
         // UC2  – Bước 2.1.1: Đăng ký ActionListener cho nút Reset, ComboBox và các nút cột
@@ -135,6 +136,8 @@ public class ConnectFourController {
                 break;
         }
         // UC2 – Bước 2.2.3: Sau khi đổi chế độ, tự động reset bàn cờ
+        // [v2.0 - ThanhTu] Reset điểm khi đổi chế độ
+        model.getScoreManager().reset();
         resetRound();
     }
 
@@ -216,6 +219,8 @@ public class ConnectFourController {
             } else if (state.isDraw()) {
                 handleDraw();                       // Hòa — bàn cờ đầy
             }
+            // [v2.0 - ThanhTu] Cập nhật điểm số sau ván
+            updateScoreLabel();
         } else {
             // UC4 – Chưa kết thúc → cập nhật lượt chơi tiếp theo
             updateStatusLabel();
@@ -254,9 +259,12 @@ public class ConnectFourController {
 
         // UC2c – Bước 2.1.4: Duyệt 42 ô (6×7), gọi view.updateCell(r,c,null) từng ô
         updateAllCells();
-
+        // [v2.0 - ThanhTu] Xóa highlight ô thắng (nếu có)
+        view.clearWinningHighlight();
         // UC2c – Bước 2.1.5: view.updateStatus("Lượt: " + player.getName())
         updateStatusLabel();
+        updateScoreLabel();
+
     }
 
     /**
@@ -305,6 +313,13 @@ public class ConnectFourController {
         Player currentPlayer = model.getCurrentPlayer();
         // UC2c – Bước 2.1.5: Hiển thị "Lượt: Người chơi Đỏ" hoặc "Lượt: Bạn"...
         view.updateStatus("Lượt: " + currentPlayer.getName());
+    }
+    /** [v2.0 - ThanhTu] Cập nhật label điểm số */
+    public void updateScoreLabel() {
+        Player p1 = model.getPlayerManager().getCurrentPlayer();  // tạm
+        String name1 = currentMode == GameMode.PVP ? "Đỏ" : "Bạn";
+        String name2 = currentMode == GameMode.PVP ? "Vàng" : "Máy";
+        view.updateScore(model.getScoreManager().getDisplayText(name1, name2));
     }
 
     /**
