@@ -19,10 +19,10 @@ public class CellPanel extends JPanel {
 
     private Player player;
 
-    // [v2.0 - Người 1] Đánh dấu nếu ô này thuộc đường thắng
+    // [v2.0 - Thanh Tú] Đánh dấu nếu ô này thuộc đường thắng
     private boolean isWinning = false;
 
-    // [v2.0 - Người 1] Trạng thái nhấp nháy (toggle bởi Timer ngoài)
+    // [v2.0 - Thanh Tú] Trạng thái nhấp nháy (toggle bởi Timer ngoài)
     private boolean blinkOn = true;
 
     public CellPanel() {
@@ -36,13 +36,13 @@ public class CellPanel extends JPanel {
         repaint();
     }
 
-    /** [v2.0 - Người 1] Đặt cờ này là ô thắng (để highlight) */
+    /** [v2.0 -  Thanh Tú] Đặt cờ này là ô thắng (để highlight) */
     public void setWinning(boolean winning) {
         this.isWinning = winning;
         repaint();
     }
 
-    /** [v2.0 - Người 1] Toggle nhấp nháy - gọi từ Timer trong View */
+    /** [v2.0 -  Thanh Tú Toggle nhấp nháy - gọi từ Timer trong View */
     public void toggleBlink() {
         if (isWinning) {
             blinkOn = !blinkOn;
@@ -81,7 +81,7 @@ public class CellPanel extends JPanel {
         g2.setColor(fillColor);
         g2.fillOval(x, y, size, size);
 
-        // [v2.0 - Người 1] Vẽ viền vàng nhấp nháy nếu là ô thắng
+        // [v2.0 - Thanh Tú] Vẽ viền vàng nhấp nháy nếu là ô thắng
         if (isWinning && blinkOn) {
             g2.setColor(new Color(255, 215, 0));  // gold
             g2.setStroke(new BasicStroke(5f));
