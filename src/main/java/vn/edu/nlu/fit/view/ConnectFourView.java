@@ -47,7 +47,7 @@ public class ConnectFourView extends JFrame {
     private JLabel timerLabel;
     private JComboBox<AIDifficulty> difficultyComboBox;
 
-    // [v2.0 - Người 1] Hiển thị điểm thắng/thua
+    // [v2.0 - ThanhTu] Hiển thị điểm thắng/thua
     private JLabel scoreLabel;
 
     // [v2.0 - Người 2] Nút Undo + Animator
@@ -59,7 +59,7 @@ public class ConnectFourView extends JFrame {
     private JCheckBox soundCheckBox;
     private ThemeManager themeManager;
 
-    // [v2.0 - Người 1] Timer nhấp nháy ô thắng
+    // [v2.0 - ThanhTu] Timer nhấp nháy ô thắng
     private Timer blinkTimer;
 
     public ConnectFourView(int rows, int cols) {
@@ -105,7 +105,7 @@ public class ConnectFourView extends JFrame {
         // [v2.0 - Người 2] Khởi tạo animator sau khi cellPanels được tạo
         this.animator = new PieceDropAnimator(cellPanels);
 
-        // [v2.0 - Người 1] Timer nhấp nháy ô thắng (500ms toggle)
+        // [v2.0 - ThanhTu] Timer nhấp nháy ô thắng (500ms toggle)
         this.blinkTimer = new Timer(500, e -> {
             for (int r = 0; r < rows; r++) {
                 for (int c = 0; c < cols; c++) {
@@ -206,7 +206,7 @@ public class ConnectFourView extends JFrame {
             statusLabel.setFont(new Font("Arial", Font.BOLD, 16));
             leftPanel.add(statusLabel);
 
-            // [v2.0 - Người 1] Hiển thị điểm số dưới statusLabel
+            // [v2.0 - ThanhTu] Hiển thị điểm số dưới statusLabel
             scoreLabel.setFont(new Font("Arial", Font.PLAIN, 13));
             scoreLabel.setForeground(new Color(80, 80, 80));
             leftPanel.add(scoreLabel);
@@ -284,12 +284,12 @@ public class ConnectFourView extends JFrame {
     // Public API - v2.0 (mở rộng)
     // ========================================================================
 
-    /** [v2.0 - Người 1] Cập nhật text điểm số */
+    /** [v2.0 - ThanhTu] Cập nhật text điểm số */
     public void updateScore(String text) {
         this.scoreLabel.setText(text);
     }
 
-    /** [v2.0 - Người 1] Highlight các ô thắng và bắt đầu nhấp nháy */
+    /** [v2.0 - ThanhTu] Highlight các ô thắng và bắt đầu nhấp nháy */
     public void highlightWinningCells(WinningCells winningCells) {
         if (winningCells == null || winningCells.isEmpty()) return;
         for (int[] pos : winningCells.getCells()) {
@@ -298,7 +298,7 @@ public class ConnectFourView extends JFrame {
         blinkTimer.start();
     }
 
-    /** [v2.0 - Người 1] Xóa highlight (khi reset hoặc undo) */
+    /** [v2.0 - ThanhTu] Xóa highlight (khi reset hoặc undo) */
     public void clearWinningHighlight() {
         blinkTimer.stop();
         for (int r = 0; r < rows; r++) {
