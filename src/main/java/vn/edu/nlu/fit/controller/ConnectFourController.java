@@ -133,6 +133,8 @@ public class ConnectFourController {
     private void handleThemeToggle() {
         view.getThemeManager().toggle();
         view.applyTheme();
+        // Cập nhật màu chữ timer theo theme mới
+        turnTimer.setNormalColor(view.getThemeManager().getTextColor());
         SoundManager.playClick();
     }
 
@@ -226,6 +228,11 @@ public class ConnectFourController {
 
             // UC4 – 4.2.1: Kiểm tra kết quả sau nước đi của AI
             checkGameState();
+        }
+
+        // Restart timer cho lượt tiếp theo nếu game chưa kết thúc
+        if (!model.isGameOver()) {
+            turnTimer.start();
         }
     }
 

@@ -72,15 +72,15 @@ public class ConnectFourView extends JFrame {
 
         // [v2.0] Khởi tạo các thành phần mới từ các thành viên
         this.scoreLabel = new JLabel("Đỏ 0 - 0 Vàng  |  Hòa: 0");
-        this.undoButton = new JButton("↶ Undo");
-        this.themeButton = new JButton("🌙 Dark");
-        this.soundCheckBox = new JCheckBox("🔊 Âm thanh", true);
-        this.timerLabel = new JLabel("⏱ 30s");
+        this.undoButton = new JButton("Undo");
+        this.themeButton = new JButton("Dark");
+        this.soundCheckBox = new JCheckBox("Âm thanh", true);
+        this.timerLabel = new JLabel("30s");
         this.difficultyComboBox = new JComboBox<>(AIDifficulty.values());
         this.difficultyComboBox.setSelectedItem(AIDifficulty.HARD);
-        this.hintButton = new JButton("💡 Hint");
-        this.saveButton = new JButton("💾 Save");
-        this.loadButton = new JButton("📂 Load");
+        this.hintButton = new JButton("Hint");
+        this.saveButton = new JButton("Save");
+        this.loadButton = new JButton("Load");
         this.themeManager = new ThemeManager();
 
         this.setLayout(new BorderLayout(8, 8));
@@ -334,27 +334,63 @@ public class ConnectFourView extends JFrame {
 
         themeColor = board;
 
-        // Cập nhật toàn bộ
-        getContentPane().setBackground(bg);
-        statusLabel.setForeground(text);
-        scoreLabel.setForeground(text);
-        timerLabel.setForeground(text);
-        GameModeTitle.setForeground(text);
+        // Đệ quy cập nhật nền cho tất cả panel con (trừ CellPanel)
+        applyBgRecursive(getContentPane(), bg);
 
+        // GameBoardPanel dùng màu bàn cờ riêng
+        if (cellPanels[0][0].getParent() != null) {
+            cellPanels[0][0].getParent().setBackground(board);
+        }
+
+        // Cập nhật CellPanel với màu bàn cờ
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
                 cellPanels[r][c].setBackground(board);
             }
         }
 
+        // Cập nhật màu chữ
+        statusLabel.setForeground(text);
+        scoreLabel.setForeground(text);
+        timerLabel.setForeground(text);
+        GameModeTitle.setForeground(text);
+
+        // Cập nhật nút điều khiển
         for (JButton b : new JButton[]{resetButton, undoButton, hintButton,
                 saveButton, loadButton, themeButton}) {
             b.setBackground(btn);
             b.setForeground(text);
         }
 
-        themeButton.setText(themeManager.isDark() ? "☀ Light" : "🌙 Dark");
+        // Cập nhật nút cột (DropPanel)
+        for (JButton cb : colButtons) {
+            cb.setBackground(btn);
+            cb.setForeground(text);
+        }
+
+        // Cập nhật ComboBox
+        modeComboBox.setBackground(btn);
+        modeComboBox.setForeground(text);
+        difficultyComboBox.setBackground(btn);
+        difficultyComboBox.setForeground(text);
+
+        // Cập nhật SoundCheckBox
+        soundCheckBox.setBackground(bg);
+        soundCheckBox.setForeground(text);
+
+        themeButton.setText(themeManager.isDark() ? "Light" : "Dark");
 
         repaint();
+    }
+
+    /** Đệ quy cập nhật nền cho tất cả container con (bỏ qua CellPanel) */
+    private void applyBgRecursive(Container container, Color bg) {
+        container.setBackground(bg);
+        for (Component comp : container.getComponents()) {
+            if (comp instanceof CellPanel) continue;
+            if (comp instanceof Container) {
+                applyBgRecursive((Container) comp, bg);
+            }
+        }
     }
 }
