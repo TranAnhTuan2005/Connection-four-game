@@ -11,6 +11,8 @@ public class ConnectFourGame {
     private int rows, cols;
     // [update - Thanh Tú] Quản lý điểm số qua nhiều ván
     private ScoreManager scoreManager;
+    // [update - Nhã Trân] Lưu lịch sử nước đi để hỗ trợ chức năng Undo
+    private MoveHistory moveHistory;
 
     public ConnectFourGame(int rows, int cols, WinChecker winChecker) {
         this.rows = rows;
@@ -20,6 +22,7 @@ public class ConnectFourGame {
         this.gameState = new GameState();
         this.winChecker = winChecker;
         this.scoreManager = new ScoreManager();// [update - Thanh Tú]
+        this.moveHistory = new MoveHistory();//[update - Nhã Trân]
     }
 
     public void setPlayers(Player player1, Player player2){
@@ -41,7 +44,7 @@ public class ConnectFourGame {
         board.setCell(row, col, currentPlayer.getId());
 
         Move move = new Move(row, col, currentPlayer);
-
+        moveHistory.push(move);//[update - Nhã Trân]
 
         if (winChecker.checkWin(board, row, col, currentPlayer.getId())) {
             gameState.setWinner(currentPlayer);
@@ -64,6 +67,7 @@ public class ConnectFourGame {
         this.board = new Board(rows, cols);
         playerManager.reset();
         gameState.reset();
+        moveHistory.clear();//[update - Nhã Trân]
     }
 
     public boolean isGameOver() {
@@ -80,6 +84,26 @@ public class ConnectFourGame {
 
     public int getCols() {
         return board.getCols();
+    }
+
+    // [update - Nhã Trân] Hoàn tác nước đi gần nhất
+    public Move undoLastMove() {
+        // Không có nước đi nào để hoàn tác
+        if (moveHistory.isEmpty()) return null;
+
+        // Lấy nước đi cuối từ stack và xóa quân khỏi board
+        Move lastMove = moveHistory.pop();
+        board.setCell(lastMove.getRow(), lastMove.getCol(), 0); // 0 = ô trống
+
+        if (gameState.isGameOver()) {
+            // Nếu vừa có người thắng → reset gameState về đang chơi
+            gameState.reset();
+        } else {
+            // Undo xong → trả lượt về người đã đi nước đó
+            playerManager.switchToNextPlayer();
+        }
+
+        return lastMove;
     }
 
 }
