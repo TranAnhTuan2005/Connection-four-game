@@ -45,6 +45,17 @@ public class MoveHistory {
     }
 
     /**
+     * Kiểm tra stack có rỗng không.
+     * Dùng trong Controller để disable nút Undo khi không còn nước đi.
+     *
+     * @return true nếu chưa có nước đi nào được lưu
+     */
+    public boolean isEmpty() {
+        return stack.isEmpty();
+    }
+
+
+    /**
      * Xem nước đi ở đỉnh stack mà không xóa.
      * Hữu ích để kiểm tra trước khi quyết định undo.
      *
