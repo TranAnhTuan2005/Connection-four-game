@@ -42,7 +42,7 @@ public class CellPanel extends JPanel {
         repaint();
     }
 
-    /** [v2.0 -  Thanh Tú Toggle nhấp nháy - gọi từ Timer trong View */
+    /** [v2.0 -  Thanh Tú] Toggle nhấp nháy - gọi từ Timer trong View */
     public void toggleBlink() {
         if (isWinning) {
             blinkOn = !blinkOn;
