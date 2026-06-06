@@ -333,10 +333,11 @@ public class ConnectFourController {
                                                         human.getId(),
                                                         model.getWinChecker(),
                                                         new ConnectFourHeuristic(human.getId(), 2));
-        // Áp dụng cấp độ AI theo lựa chọn
+        // Áp dụng cấp độ AI theo lựa chọn (depth + tỉ lệ sai lầm)
         AIDifficulty diff = view.getSelectedDifficulty();
         if (diff != null) {
              ai.setSearchDepth(diff.getDepth());
+             ai.setMistakeRate(diff.getMistakeRate());
         }
         // UC2b – Bước 2.2.2: Đăng ký human + AI vào model
         model.setPlayers(human, ai);
