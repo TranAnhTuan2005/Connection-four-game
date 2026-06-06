@@ -121,6 +121,9 @@ public class ConnectFourController {
         // ComboBox cấp độ AI
         view.getDifficultyComboBox().addActionListener(e -> handleDifficultyChange());
 
+        // [v2.0 - Người 2] Đăng ký lắng nghe sự kiện Undo
+        view.getUndoButton().addActionListener(e -> handleUndo());
+
         // [Nhánh main] Đăng ký lắng nghe sự kiện cho 3 nút: Gợi ý, Lưu, Tải ván chơi
         view.getHintButton().addActionListener(e -> handleHint());
         view.getSaveButton().addActionListener(e -> handleSave());
@@ -374,6 +377,54 @@ public class ConnectFourController {
         }
         // UC2c – Bước 2.1.4: Repaint để hiển thị toàn bộ thay đổi cùng lúc
         view.repaint();
+    }
+
+    // ========================================================================
+    // [v2.0 - Người 2] UNDO
+    // ========================================================================
+
+    /**
+     * Xử lý khi người dùng nhấn nút Undo.
+     * PvP: hoàn tác 1 nước đi (lượt trước).
+     * PvE: hoàn tác 2 nước đi (AI + Human) để trả lại lượt cho người chơi.
+     */
+    private void handleUndo() {
+        if (!model.hasMoveHistory()) {
+            view.showMessage("Không có nước đi nào để hoàn tác!");
+            return;
+        }
+
+        // Xóa highlight ô thắng (nếu có)
+        view.clearWinningHighlight();
+
+        if (currentMode == GameMode.PVE) {
+            // PvE: undo nước đi cuối
+            Move lastMove = model.undoLastMove();
+            if (lastMove != null) {
+                view.updateCell(lastMove.getRow(), lastMove.getCol(), null);
+
+                // Nếu nước vừa undo là của AI → cần undo thêm nước của Human
+                if (lastMove.getPlayer().isAI() && model.hasMoveHistory()) {
+                    Move humanMove = model.undoLastMove();
+                    if (humanMove != null) {
+                        view.updateCell(humanMove.getRow(), humanMove.getCol(), null);
+                    }
+                }
+            }
+        } else {
+            // PvP: undo 1 nước đi
+            Move lastMove = model.undoLastMove();
+            if (lastMove != null) {
+                view.updateCell(lastMove.getRow(), lastMove.getCol(), null);
+            }
+        }
+
+        // Cập nhật giao diện
+        updateStatusLabel();
+        updateScoreLabel();
+
+        // Restart timer cho lượt hiện tại
+        turnTimer.start();
     }
 
     // ========================================================================
