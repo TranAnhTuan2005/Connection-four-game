@@ -1,44 +1,6 @@
 package vn.edu.nlu.fit.view;
 /**
  * @file    PieceDropAnimator.java
- * @package vn.edu.nlu.fit.model
- * @author  [Nhã Trân - 23130343]
- * @date    2026-06-06
- * @version 1.0
- * @desc    Tạo hiệu ứng quân cờ rơi từ hàng 0 xuống hàng đích (targetRow).
- *          Dùng Swing Timer 60fps (~16ms/frame), tổng ~300ms (18 frame).
- *          Được ConnectFourController gọi sau mỗi makeMove() thành công,
- *          thay thế cho view.updateCell() trực tiếp.
- * @history v1.0 2026-06-06 - Tạo mới
- */
-
-import vn.edu.nlu.fit.model.Player;
-import javax.swing.Timer;
-public class PieceDropAnimator {
-
-    // --- Hằng số điều chỉnh tốc độ animation ---
-
-    private static final int FRAME_DELAY = 16;   // ~60fps — delay tối thiểu mỗi frame (ms)
-    private static final int TOTAL_FRAMES = 18;   // tổng số frame mục tiêu → ≈300ms
-
-    // --- Trạng thái ---
-
-    /**
-     * Ma trận CellPanel của ConnectFourView — tham chiếu trực tiếp.
-     */
-    private final CellPanel[][] cellPanels;
-
-    // =========================================================================
-    // Constructor
-    // =========================================================================
-
-    /**
-     * @param cellPanels Ma trận CellPanel của ConnectFourView (rows × cols).
-     *                   Giữ tham chiếu trực tiếp, không copy.
-     */
-=======
-/**
- * @file    PieceDropAnimator.java
  * @package vn.edu.nlu.fit.view
  * @author  [Người 2]
  * @date    2026-06-01
@@ -47,64 +9,63 @@ public class PieceDropAnimator {
  *          Sử dụng Swing Timer 60fps, tổng thời gian ~300ms.
  * @history v1.0 2026-06-01 - Tạo mới
  */
-package vn.edu.nlu.fit.view;
-
 import vn.edu.nlu.fit.model.Player;
-
 import javax.swing.Timer;
-import java.awt.event.ActionListener;
 
 public class PieceDropAnimator {
 
-    private static final int FRAME_DELAY = 16;        // ≈60fps
-    private static final int TOTAL_FRAMES = 18;       // ≈300ms
+    private static final int FRAME_DELAY  = 16;   // ~60fps — delay tối thiểu mỗi frame (ms)
+    private static final int TOTAL_FRAMES = 18;   // tổng số frame mục tiêu → ≈300ms
 
     private final CellPanel[][] cellPanels;
 
+    /**
+     * @param cellPanels Ma trận CellPanel của ConnectFourView (rows × cols).
+     *                   Giữ tham chiếu trực tiếp, không copy.
+     */
     public PieceDropAnimator(CellPanel[][] cellPanels) {
         this.cellPanels = cellPanels;
     }
 
-    // =========================================================================
-    // Public API
-    // =========================================================================
-
-    public void animateDrop(int targetRow, int col, Player player, Runnable onComplete) {
-
-        // Trường hợp đặc biệt: quân rơi đúng vào hàng đầu → không cần animate
     /**
-     * Animation quân rơi từ hàng 0 xuống targetRow ở cột col.
+     * Chạy animation quân rơi từ hàng 0 xuống targetRow trong cột col.
      *
-     * @param targetRow  Hàng đích
-     * @param col        Cột
-     * @param player     Người chơi
-     * @param onComplete Callback sau khi animation kết thúc
+     * Luồng thực thi:
+     *   Trước timer    : cellPanels[0][col].setPlayer(player)
+     *   Tick 1         : clear row 0  → show row 1
+     *   Tick 2         : clear row 1  → show row 2
+     *   ...
+     *   Tick targetRow : clear row (targetRow-1) → show targetRow → STOP → onComplete()
+     *
+     * Trường hợp đặc biệt:
+     *   targetRow == 0 → đặt trực tiếp, gọi ngay onComplete (không cần animate).
+     *
+     * @param targetRow  Hàng đích — từ Board.findLowestEmptyRow(), đã hợp lệ.
+     * @param col        Cột người chơi / AI vừa chọn (0-indexed).
+     * @param player     Player sở hữu quân cờ.
+     * @param onComplete Callback trên EDT sau khi animation kết thúc.
      */
     public void animateDrop(int targetRow, int col, Player player, Runnable onComplete) {
-        // Trường hợp đặc biệt: thả vào hàng 0 → đặt luôn, không animation
+
+        // Trường hợp đặc biệt: quân rơi đúng vào hàng đầu → đặt trực tiếp
         if (targetRow == 0) {
             cellPanels[0][col].setPlayer(player);
             if (onComplete != null) onComplete.run();
             return;
+        }
 
         // Tính delay mỗi bước:
         //   TOTAL_FRAMES * FRAME_DELAY = 18 * 16 = 288ms ≈ tổng thời gian mục tiêu
         //   Chia đều cho targetRow bước → ms/bước
         //   Giới hạn dưới: FRAME_DELAY (~60fps)
         //   Giới hạn trên: 80ms (tránh quá chậm khi targetRow = 1)
-        //
-        //   Ví dụ (board 6 hàng):
-        //     targetRow=5 → max(16, min(80, 288/5)) = 57ms/bước → tổng 285ms
-        //     targetRow=3 → max(16, min(80, 288/3)) = 80ms/bước → tổng 240ms
-        //     targetRow=1 → max(16, min(80, 288/1)) = 80ms/bước → tổng  80ms
         int stepDelay = Math.max(FRAME_DELAY,
                 Math.min(80, (TOTAL_FRAMES * FRAME_DELAY) / targetRow));
 
-        // int[] để có thể gán bên trong lambda (effectively final)
+        // int[] để gán được bên trong lambda (effectively final)
         int[] currentRow = {0};
 
-        // Timer[] thay cho instance field: giúp gọi timerRef[0].stop()
-        // bên trong lambda mà không cần instance field (effectively final)
+        // Timer[] thay cho instance field: gọi được timerRef[0].stop() trong lambda
         Timer[] timerRef = {null};
 
         // Hiện quân ở hàng 0 ngay lập tức, trước khi timer bắt đầu
@@ -129,36 +90,5 @@ public class PieceDropAnimator {
         });
 
         timerRef[0].start();
-    }
-}
-        final int[] currentRow = {0};
-        final int[] frame = {0};
-        final int framesPerCell = Math.max(1, TOTAL_FRAMES / (targetRow + 1));
-
-        Timer timer = new Timer(FRAME_DELAY, null);
-        ActionListener tick = e -> {
-            frame[0]++;
-            // Mỗi framesPerCell tick → di chuyển xuống 1 hàng
-            if (frame[0] % framesPerCell == 0 && currentRow[0] < targetRow) {
-                // Xóa ô cũ
-                if (currentRow[0] > 0) {
-                    cellPanels[currentRow[0] - 1][col].setPlayer(null);
-                }
-                // Tô ô mới
-                cellPanels[currentRow[0]][col].setPlayer(player);
-                currentRow[0]++;
-            }
-            // Kết thúc animation
-            if (currentRow[0] >= targetRow) {
-                if (currentRow[0] > 0) {
-                    cellPanels[currentRow[0] - 1][col].setPlayer(null);
-                }
-                cellPanels[targetRow][col].setPlayer(player);
-                ((Timer) e.getSource()).stop();
-                if (onComplete != null) onComplete.run();
-            }
-        };
-        timer.addActionListener(tick);
-        timer.start();
     }
 }
