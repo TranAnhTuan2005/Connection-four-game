@@ -24,11 +24,20 @@ public class TurnTimer {
     private Timer timer;
     private int secondsLeft;
     private int totalSeconds;
+    private Color normalColor = Color.BLACK;
 
     public TurnTimer(JLabel timerLabel, Runnable onTimeout) {
         this.timerLabel = timerLabel;
         this.onTimeout = onTimeout;
         this.totalSeconds = DEFAULT_SECONDS;
+    }
+
+    /** Cập nhật màu chữ bình thường (khi > 5s) theo theme */
+    public void setNormalColor(Color color) {
+        this.normalColor = color;
+        if (secondsLeft > 5) {
+            timerLabel.setForeground(normalColor);
+        }
     }
 
     public void setTotalSeconds(int seconds) {
@@ -59,7 +68,7 @@ public class TurnTimer {
     }
 
     private void updateLabel() {
-        timerLabel.setText(String.format("⏱ %ds", secondsLeft));
-        timerLabel.setForeground(secondsLeft <= 5 ? Color.RED : Color.BLACK);
+        timerLabel.setText(secondsLeft + "s");
+        timerLabel.setForeground(secondsLeft <= 5 ? Color.RED : normalColor);
     }
 }

@@ -1,6 +1,7 @@
 package vn.edu.nlu.fit.model;
 
 import lombok.Getter;
+import java.util.Stack;
 
 @Getter
 public class ConnectFourGame {

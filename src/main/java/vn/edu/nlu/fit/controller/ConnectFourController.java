@@ -14,6 +14,7 @@
 package vn.edu.nlu.fit.controller;
 
 import vn.edu.nlu.fit.audio.SoundManager;
+import vn.edu.nlu.fit.enums.AIDifficulty;
 import vn.edu.nlu.fit.enums.GameMode;
 import vn.edu.nlu.fit.heuristic.ConnectFourHeuristic;
 import vn.edu.nlu.fit.model.*;
@@ -68,9 +69,28 @@ public class ConnectFourController {
         //Bắt đầu đếm ngược cho lượt đầu tiên
         this.turnTimer.start();
     }
+    private void handleDifficultyChange() {
+        // Chỉ áp dụng khi đang PvE
+        if (currentMode == GameMode.PVE) {
+            startPvE();  // tạo lại AI với độ khó mới
+            resetRound();
+        }
+    }
     /** Callback khi hết giờ - người chơi hiện tại thua */
     private void handleTurnTimeout() {
-        //
+        Player current = model.getCurrentPlayer();
+        Player opponent = (current.getId() == 1)
+                ? model.getPlayerManager().getOpponent() // get the other player
+                : model.getPlayerManager().getOpponent();
+
+        view.showMessage("Hết giờ! " + current.getName() + " thua lượt.");
+
+        // Xử lý đơn giản: người còn lại thắng
+        model.getGameState().setWinner(opponent);
+        model.getScoreManager().addWin(opponent);
+        view.updateStatus("Game kết thúc: " + opponent.getName() + " thắng!");
+        SoundManager.playWin();
+        updateScoreLabel();
     }
 
     /**
@@ -98,6 +118,12 @@ public class ConnectFourController {
             SoundManager.setEnabled(view.getSoundCheckBox().isSelected());
         });
 
+        // ComboBox cấp độ AI
+        view.getDifficultyComboBox().addActionListener(e -> handleDifficultyChange());
+
+        // [v2.0 - Người 2] Đăng ký lắng nghe sự kiện Undo
+        view.getUndoButton().addActionListener(e -> handleUndo());
+
         // [Nhánh main] Đăng ký lắng nghe sự kiện cho 3 nút: Gợi ý, Lưu, Tải ván chơi
         view.getHintButton().addActionListener(e -> handleHint());
         view.getSaveButton().addActionListener(e -> handleSave());
@@ -110,6 +136,8 @@ public class ConnectFourController {
     private void handleThemeToggle() {
         view.getThemeManager().toggle();
         view.applyTheme();
+        // Cập nhật màu chữ timer theo theme mới
+        turnTimer.setNormalColor(view.getThemeManager().getTextColor());
         SoundManager.playClick();
     }
 
@@ -133,6 +161,8 @@ public class ConnectFourController {
                 currentMode = GameMode.PVE;
                 startPvE();
                 view.setGameModeTitleText(GameMode.PVE.toString());
+                // Hiển thị ComboBox độ khó khi PVE
+                view.getDifficultyComboBox().setVisible(true);
                 break;
         }
         // UC2 – Bước 2.2.3: Sau khi đổi chế độ, tự động reset bàn cờ
@@ -202,6 +232,11 @@ public class ConnectFourController {
             // UC4 – 4.2.1: Kiểm tra kết quả sau nước đi của AI
             checkGameState();
         }
+
+        // Restart timer cho lượt tiếp theo nếu game chưa kết thúc
+        if (!model.isGameOver()) {
+            turnTimer.start();
+        }
     }
 
     /**
@@ -264,7 +299,8 @@ public class ConnectFourController {
         // UC2c – Bước 2.1.5: view.updateStatus("Lượt: " + player.getName())
         updateStatusLabel();
         updateScoreLabel();
-
+        // Restart timer cho ván mới
+        if (turnTimer != null) turnTimer.start();
     }
 
     /**
@@ -296,11 +332,16 @@ public class ConnectFourController {
 
         // UC2b – Bước 2.2.2: Tạo AI (Minimax depth=7, heuristic ưu tiên cột giữa)
         //         Tham số: AIPlayer(id, name, color, humanId, winChecker, heuristic)
-        Player ai = new AIPlayer(2, "Máy", new Color(255, 210, 25),
+        AIPlayer ai = new AIPlayer(2, "Máy", new Color(255, 210, 25),
                                                         human.getId(),
                                                         model.getWinChecker(),
                                                         new ConnectFourHeuristic(human.getId(), 2));
-
+        // Áp dụng cấp độ AI theo lựa chọn (depth + tỉ lệ sai lầm)
+        AIDifficulty diff = view.getSelectedDifficulty();
+        if (diff != null) {
+             ai.setSearchDepth(diff.getDepth());
+             ai.setMistakeRate(diff.getMistakeRate());
+        }
         // UC2b – Bước 2.2.2: Đăng ký human + AI vào model
         model.setPlayers(human, ai);
     }
@@ -336,6 +377,54 @@ public class ConnectFourController {
         }
         // UC2c – Bước 2.1.4: Repaint để hiển thị toàn bộ thay đổi cùng lúc
         view.repaint();
+    }
+
+    // ========================================================================
+    // [v2.0 - Người 2] UNDO
+    // ========================================================================
+
+    /**
+     * Xử lý khi người dùng nhấn nút Undo.
+     * PvP: hoàn tác 1 nước đi (lượt trước).
+     * PvE: hoàn tác 2 nước đi (AI + Human) để trả lại lượt cho người chơi.
+     */
+    private void handleUndo() {
+        if (!model.hasMoveHistory()) {
+            view.showMessage("Không có nước đi nào để hoàn tác!");
+            return;
+        }
+
+        // Xóa highlight ô thắng (nếu có)
+        view.clearWinningHighlight();
+
+        if (currentMode == GameMode.PVE) {
+            // PvE: undo nước đi cuối
+            Move lastMove = model.undoLastMove();
+            if (lastMove != null) {
+                view.updateCell(lastMove.getRow(), lastMove.getCol(), null);
+
+                // Nếu nước vừa undo là của AI → cần undo thêm nước của Human
+                if (lastMove.getPlayer().isAI() && model.hasMoveHistory()) {
+                    Move humanMove = model.undoLastMove();
+                    if (humanMove != null) {
+                        view.updateCell(humanMove.getRow(), humanMove.getCol(), null);
+                    }
+                }
+            }
+        } else {
+            // PvP: undo 1 nước đi
+            Move lastMove = model.undoLastMove();
+            if (lastMove != null) {
+                view.updateCell(lastMove.getRow(), lastMove.getCol(), null);
+            }
+        }
+
+        // Cập nhật giao diện
+        updateStatusLabel();
+        updateScoreLabel();
+
+        // Restart timer cho lượt hiện tại
+        turnTimer.start();
     }
 
     // ========================================================================
