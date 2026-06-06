@@ -294,7 +294,7 @@ public class ConnectFourController {
 
         // UC2c – Bước 2.1.4: Duyệt 42 ô (6×7), gọi view.updateCell(r,c,null) từng ô
         updateAllCells();
-        // [v2.0 - ThanhTu] Xóa highlight ô thắng (nếu có)
+        // [v2.0 - Thanh Tú] Xóa highlight ô thắng (nếu có)
         view.clearWinningHighlight();
         // UC2c – Bước 2.1.5: view.updateStatus("Lượt: " + player.getName())
         updateStatusLabel();
@@ -355,7 +355,7 @@ public class ConnectFourController {
         // UC2c – Bước 2.1.5: Hiển thị "Lượt: Người chơi Đỏ" hoặc "Lượt: Bạn"...
         view.updateStatus("Lượt: " + currentPlayer.getName());
     }
-    /** [v2.0 - ThanhTu] Cập nhật label điểm số */
+    /** [v2.0 - Thanh Tú] Cập nhật label điểm số */
     public void updateScoreLabel() {
         Player p1 = model.getPlayerManager().getCurrentPlayer();  // tạm
         String name1 = currentMode == GameMode.PVP ? "Đỏ" : "Bạn";

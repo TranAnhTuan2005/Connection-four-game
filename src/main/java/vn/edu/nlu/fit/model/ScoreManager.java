@@ -1,6 +1,10 @@
 package vn.edu.nlu.fit.model;
 import lombok.Getter;
 
+/**
+ * Người tạo : Trần Nguyễn Thanh Tú (Ngày tạo 31-05-2026)
+ * ScoreManager được tạo phát triển cho UC-11: Đếm điểm
+ */
 @Getter
 public class ScoreManager {
     private int player1Score;
