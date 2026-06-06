@@ -1,7 +1,6 @@
 package vn.edu.nlu.fit.model;
 
 import lombok.Getter;
-import java.util.Stack;
 
 @Getter
 public class ConnectFourGame {
@@ -12,7 +11,7 @@ public class ConnectFourGame {
     private int rows, cols;
     // [update - Thanh Tú] Quản lý điểm số qua nhiều ván
     private ScoreManager scoreManager;
-    // [update - Nhã Trân] Lưu lịch sử nước đi để hỗ trợ chức năng Undo
+    // [update - v2.0 - Nhã Trân] Lưu lịch sử nước đi để hỗ trợ chức năng Undo
     private MoveHistory moveHistory;
 
     public ConnectFourGame(int rows, int cols, WinChecker winChecker) {
@@ -45,7 +44,7 @@ public class ConnectFourGame {
         board.setCell(row, col, currentPlayer.getId());
 
         Move move = new Move(row, col, currentPlayer);
-        moveHistory.push(move);//[update - Nhã Trân]
+        moveHistory.push(move);//[update - Người 2]
 
         if (winChecker.checkWin(board, row, col, currentPlayer.getId())) {
             gameState.setWinner(currentPlayer);
@@ -105,6 +104,11 @@ public class ConnectFourGame {
         }
 
         return lastMove;
+    }
+    // Kiểm tra còn lịch sử nước đi để undo không
+    // Controller dùng để hiển thị thông báo khi stack rỗng
+    public boolean hasMoveHistory() {
+        return !moveHistory.isEmpty();
     }
 
 }

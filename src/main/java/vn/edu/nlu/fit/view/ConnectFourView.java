@@ -50,7 +50,7 @@ public class ConnectFourView extends JFrame {
     // [v2.0 - ThanhTu] Hiển thị điểm thắng/thua
     private JLabel scoreLabel;
 
-    // [v2.0 - Người 2] Nút Undo + Animator
+    // [v2.0 - Nhã Trân] Nút Undo + Animator
     private JButton undoButton;
     private PieceDropAnimator animator;
 
@@ -106,7 +106,7 @@ public class ConnectFourView extends JFrame {
         } catch (Exception ignored) {}
         this.setLocationRelativeTo(null);
 
-        // [v2.0 - Người 2] Khởi tạo animator sau khi cellPanels được tạo
+        // [v2.0 - Nhã Trân] Khởi tạo animator sau khi cellPanels được tạo
         this.animator = new PieceDropAnimator(cellPanels);
 
         // [v2.0 - ThanhTu] Timer nhấp nháy ô thắng (500ms toggle)
@@ -224,7 +224,7 @@ public class ConnectFourView extends JFrame {
             styleButton(hintButton);
             control.add(hintButton);
 
-            // [v2.0 - Người 2] Undo button
+            // [v2.0 - Nhã Trân] Undo button
             styleButton(undoButton);
             control.add(undoButton);
 
