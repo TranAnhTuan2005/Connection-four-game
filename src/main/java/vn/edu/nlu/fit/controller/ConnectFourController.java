@@ -14,6 +14,7 @@
 package vn.edu.nlu.fit.controller;
 
 import vn.edu.nlu.fit.audio.SoundManager;
+import vn.edu.nlu.fit.enums.AIDifficulty;
 import vn.edu.nlu.fit.enums.GameMode;
 import vn.edu.nlu.fit.heuristic.ConnectFourHeuristic;
 import vn.edu.nlu.fit.model.*;
@@ -68,9 +69,28 @@ public class ConnectFourController {
         //Bắt đầu đếm ngược cho lượt đầu tiên
         this.turnTimer.start();
     }
+    private void handleDifficultyChange() {
+        // Chỉ áp dụng khi đang PvE
+        if (currentMode == GameMode.PVE) {
+            startPvE();  // tạo lại AI với độ khó mới
+            resetRound();
+        }
+    }
     /** Callback khi hết giờ - người chơi hiện tại thua */
     private void handleTurnTimeout() {
-        //
+        Player current = model.getCurrentPlayer();
+        Player opponent = (current.getId() == 1)
+                ? model.getPlayerManager().getOpponent() // get the other player
+                : model.getPlayerManager().getOpponent();
+
+        view.showMessage("Hết giờ! " + current.getName() + " thua lượt.");
+
+        // Xử lý đơn giản: người còn lại thắng
+        model.getGameState().setWinner(opponent);
+        model.getScoreManager().addWin(opponent);
+        view.updateStatus("Game kết thúc: " + opponent.getName() + " thắng!");
+        SoundManager.playWin();
+        updateScoreLabel();
     }
 
     /**
@@ -97,6 +117,9 @@ public class ConnectFourController {
         view.getSoundCheckBox().addActionListener(e -> {
             SoundManager.setEnabled(view.getSoundCheckBox().isSelected());
         });
+
+        // ComboBox cấp độ AI
+        view.getDifficultyComboBox().addActionListener(e -> handleDifficultyChange());
 
         // [Nhánh main] Đăng ký lắng nghe sự kiện cho 3 nút: Gợi ý, Lưu, Tải ván chơi
         view.getHintButton().addActionListener(e -> handleHint());
@@ -133,6 +156,8 @@ public class ConnectFourController {
                 currentMode = GameMode.PVE;
                 startPvE();
                 view.setGameModeTitleText(GameMode.PVE.toString());
+                // Hiển thị ComboBox độ khó khi PVE
+                view.getDifficultyComboBox().setVisible(true);
                 break;
         }
         // UC2 – Bước 2.2.3: Sau khi đổi chế độ, tự động reset bàn cờ
@@ -264,7 +289,8 @@ public class ConnectFourController {
         // UC2c – Bước 2.1.5: view.updateStatus("Lượt: " + player.getName())
         updateStatusLabel();
         updateScoreLabel();
-
+        // Restart timer cho ván mới
+        if (turnTimer != null) turnTimer.start();
     }
 
     /**
@@ -296,11 +322,15 @@ public class ConnectFourController {
 
         // UC2b – Bước 2.2.2: Tạo AI (Minimax depth=7, heuristic ưu tiên cột giữa)
         //         Tham số: AIPlayer(id, name, color, humanId, winChecker, heuristic)
-        Player ai = new AIPlayer(2, "Máy", new Color(255, 210, 25),
+        AIPlayer ai = new AIPlayer(2, "Máy", new Color(255, 210, 25),
                                                         human.getId(),
                                                         model.getWinChecker(),
                                                         new ConnectFourHeuristic(human.getId(), 2));
-
+        // Áp dụng cấp độ AI theo lựa chọn
+        AIDifficulty diff = view.getSelectedDifficulty();
+        if (diff != null) {
+             ai.setSearchDepth(diff.getDepth());
+        }
         // UC2b – Bước 2.2.2: Đăng ký human + AI vào model
         model.setPlayers(human, ai);
     }
