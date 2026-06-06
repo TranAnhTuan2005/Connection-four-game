@@ -4,11 +4,10 @@ package vn.edu.nlu.fit.model;
  * @package vn.edu.nlu.fit.model
  * @author  [Thanh Tú - 23130365]
  * @date    2026-06-02
- * @version 1.0
+ * @version 2.0
  * @desc    Lưu danh sách các ô tạo nên đường thắng.
  *          ConnectFourWinChecker điền dữ liệu khi phát hiện thắng.
  *          CellPanel dùng để highlight nhấp nháy ô thắng.
- * @history v1.0 2026-06-02 - Tạo mới
  */
 import lombok.Getter;
 

@@ -49,12 +49,12 @@ public class ConnectFourGame {
 
         if (winChecker.checkWin(board, row, col, currentPlayer.getId())) {
             gameState.setWinner(currentPlayer);
-            // [update_ Tú] Cộng điểm cho người thắng
+            // [update - Thanh Tú] Cộng điểm cho người thắng
             scoreManager.addWin(currentPlayer);
 
         } else if (board.isFull()) {
             gameState.setDraw();
-            // [update_ Tú] Cộng đếm ván hòa
+            // [update - Thanh Tú] Cộng đếm ván hòa
             scoreManager.addDraw();
 
         } else {
