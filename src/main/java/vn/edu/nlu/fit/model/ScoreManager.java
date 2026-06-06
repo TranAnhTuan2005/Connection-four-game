@@ -23,6 +23,18 @@ public class ScoreManager {
         drawCount++;
     }
 
+    /** Hoàn tác cộng điểm thắng (khi undo nước đi thắng) */
+    public void undoWin(Player winner) {
+        if (winner == null) return;
+        if (winner.getId() == 1 && player1Score > 0) player1Score--;
+        else if (winner.getId() == 2 && player2Score > 0) player2Score--;
+    }
+
+    /** Hoàn tác đếm ván hòa (khi undo nước đi cuối gây hòa) */
+    public void undoDraw() {
+        if (drawCount > 0) drawCount--;
+    }
+
     /** Reset toàn bộ điểm (khi đổi chế độ chơi) */
     public void reset() {
         player1Score = 0;

@@ -5,7 +5,7 @@ import vn.edu.nlu.fit.heuristic.Heuristic;
 import java.awt.Color;
 
 public class AIPlayer extends Player{
-    private static final int MAX_DEPTH = 7;
+    private static final int MAX_DEPTH = 10;
     private static final int WIN_SCORE = 1000000;
     private static final int LOSE_SCORE = -1000000;
 
@@ -15,6 +15,9 @@ public class AIPlayer extends Player{
     private long nodesVisited = 0;
     private boolean useAlphaBeta = true;
     private int searchDepth = MAX_DEPTH;
+
+    // Tỉ lệ đi ngẫu nhiên (0.0 = luôn tối ưu, 1.0 = hoàn toàn ngẫu nhiên)
+    private double mistakeRate = 0.0;
 
 
     public AIPlayer(int id, String name, Color color, int humanPlayerId, WinChecker winChecker, Heuristic heuristic) {
@@ -33,12 +36,28 @@ public class AIPlayer extends Player{
         return searchDepth;
     }
 
+    /** [v2.0] Đặt tỉ lệ đi ngẫu nhiên — tạo sự khác biệt giữa các cấp độ */
+    public void setMistakeRate(double rate) {
+        this.mistakeRate = Math.max(0.0, Math.min(rate, 1.0));
+    }
+
+    public double getMistakeRate() {
+        return mistakeRate;
+    }
+
     @Override
     public boolean isAI() {
         return true;
     }
+
     // [UC8 - 8.0] Được Controller kích hoạt khi đến lượt AI
     public int chooseColumn(Board board) {
+        // Với xác suất mistakeRate, AI đi ngẫu nhiên (mô phỏng sai lầm)
+        if (mistakeRate > 0 && Math.random() < mistakeRate) {
+            int randomCol = pickRandomValidColumn(board);
+            if (randomCol >= 0) return randomCol;
+        }
+
         int bestScore = Integer.MIN_VALUE;
         int bestCol = -1;
         // [UC8 - 8.2] Duyệt từng cột, lọc các cột hợp lệ (chưa đầy)
@@ -66,6 +85,21 @@ public class AIPlayer extends Player{
         return bestCol;
     }
 
+    /**
+     * Chọn ngẫu nhiên một cột hợp lệ — dùng khi AI "sai lầm".
+     * @return chỉ số cột hợp lệ ngẫu nhiên, hoặc -1 nếu bàn cờ đầy
+     */
+    private int pickRandomValidColumn(Board board) {
+        int[] valid = new int[board.getCols()];
+        int count = 0;
+        for (int col = 0; col < board.getCols(); col++) {
+            if (board.isValidColumn(col)) {
+                valid[count++] = col;
+            }
+        }
+        if (count == 0) return -1;
+        return valid[(int)(Math.random() * count)];
+    }
 
 
     private int minimaxAlphaBeta(boolean isMax, Board board, int depth, int alpha, int beta) {
@@ -162,10 +196,4 @@ public class AIPlayer extends Player{
             return minEval;
         }
     }
-
-
-
-
-
-
 }
