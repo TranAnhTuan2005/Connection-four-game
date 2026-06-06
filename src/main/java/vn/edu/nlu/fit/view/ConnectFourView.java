@@ -62,6 +62,10 @@ public class ConnectFourView extends JFrame {
     // [v2.0 - ThanhTu] Timer nhấp nháy ô thắng
     private Timer blinkTimer;
 
+    // [v2.0 - Người 5] Theo dõi cột đang highlight và timer để xóa khi nhấn Hint lại
+    private int highlightedCol = -1;
+    private Timer highlightTimer;
+
     public ConnectFourView(int rows, int cols) {
         this.rows = rows;
         this.cols = cols;
@@ -316,13 +320,33 @@ public class ConnectFourView extends JFrame {
     /** [v2.0 - Người 5] Highlight cột được gợi ý trong 2 giây */
     public void highlightColumn(int col) {
         if (col < 0 || col >= cols) return;
+
+        // Xóa highlight cũ trước khi highlight cột mới
+        clearColumnHighlight();
+
         JButton btn = colButtons[col];
         final Color originalBg = btn.getBackground();
         btn.setBackground(new Color(255, 220, 0));  // vàng
+        highlightedCol = col;
 
-        Timer t = new Timer(2000, e -> btn.setBackground(originalBg));
-        t.setRepeats(false);
-        t.start();
+        highlightTimer = new Timer(2000, e -> {
+            btn.setBackground(originalBg);
+            highlightedCol = -1;
+        });
+        highlightTimer.setRepeats(false);
+        highlightTimer.start();
+    }
+
+    /** Xóa highlight cột gợi ý hiện tại (nếu có) */
+    private void clearColumnHighlight() {
+        if (highlightTimer != null && highlightTimer.isRunning()) {
+            highlightTimer.stop();
+        }
+        if (highlightedCol >= 0 && highlightedCol < cols) {
+            // Khôi phục màu nút theo theme hiện tại
+            colButtons[highlightedCol].setBackground(themeManager.getButtonColor());
+            highlightedCol = -1;
+        }
     }
 
     /** [v2.0 - Người 3] Áp dụng theme hiện tại lên toàn bộ giao diện */
