@@ -11,6 +11,7 @@ package vn.edu.nlu.fit.view;
  */
 import vn.edu.nlu.fit.model.Player;
 import javax.swing.Timer;
+import java.awt.event.ActionListener;
 
 public class PieceDropAnimator {
 
@@ -53,42 +54,43 @@ public class PieceDropAnimator {
             if (onComplete != null) onComplete.run();
             return;
         }
+        // Số frame để di chuyển qua mỗi hàng
+        // Ví dụ: targetRow=5 → framesPerCell = max(1, 18/6) = 3 tick/hàng
+        //        targetRow=2 → framesPerCell = max(1, 18/3) = 6 tick/hàng (chậm hơn)
+        final int framesPerCell = Math.max(1, TOTAL_FRAMES / (targetRow + 1));
 
-        // Tính delay mỗi bước:
-        //   TOTAL_FRAMES * FRAME_DELAY = 18 * 16 = 288ms ≈ tổng thời gian mục tiêu
-        //   Chia đều cho targetRow bước → ms/bước
-        //   Giới hạn dưới: FRAME_DELAY (~60fps)
-        //   Giới hạn trên: 80ms (tránh quá chậm khi targetRow = 1)
-        int stepDelay = Math.max(FRAME_DELAY,
-                Math.min(80, (TOTAL_FRAMES * FRAME_DELAY) / targetRow));
+        // Đếm số tick và vị trí hàng hiện tại — dùng int[] để gán được trong lambda
+        final int[] currentRow = {0};
+        final int[] frame      = {0};
 
-        // int[] để gán được bên trong lambda (effectively final)
-        int[] currentRow = {0};
 
-        // Timer[] thay cho instance field: gọi được timerRef[0].stop() trong lambda
-        Timer[] timerRef = {null};
+        // Tạo Timer tick mỗi FRAME_DELAY ms, listener gán sau để dùng được trong lambda
+        Timer timer = new Timer(FRAME_DELAY, null);
 
-        // Hiện quân ở hàng 0 ngay lập tức, trước khi timer bắt đầu
-        cellPanels[0][col].setPlayer(player);
-
-        timerRef[0] = new Timer(stepDelay, null);
-        timerRef[0].addActionListener(e -> {
+        ActionListener tick = e -> {
+            frame[0]++; // đếm số tick đã qua
+            // Mỗi framesPerCell tick → đủ thời gian để di chuyển xuống 1 hàng
+            if (frame[0] % framesPerCell == 0 && currentRow[0] < targetRow) {
+                // Xóa quân ở hàng trước (hàng 0 là lần đầu nên chưa có gì để xóa)
+                if (currentRow[0] > 0) {
+                    cellPanels[currentRow[0] - 1][col].setPlayer(null);
+                }
             // Xóa quân khỏi hàng hiện tại
             cellPanels[currentRow[0]][col].setPlayer(null);
 
             // Di chuyển xuống một hàng
             currentRow[0]++;
-
+        }
             // Hiện quân ở hàng mới
             cellPanels[currentRow[0]][col].setPlayer(player);
 
             // Đến đích → dừng timer, gọi callback
             if (currentRow[0] >= targetRow) {
-                timerRef[0].stop();
+                ((Timer) e.getSource()).stop();
                 if (onComplete != null) onComplete.run();
             }
-        });
+        };
 
-        timerRef[0].start();
+        timer.start();
     }
 }
