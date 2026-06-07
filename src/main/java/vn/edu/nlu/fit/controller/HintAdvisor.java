@@ -1,9 +1,10 @@
 /**
  * @file    HintAdvisor.java
  * @package vn.edu.nlu.fit.controller
- * @desc    Tư vấn nước đi tốt nhất cho người chơi hiện tại.
+ * @author  Trần Anh Tuấn (MSSV: 23130372)
+ * @desc    UC12 – Gợi ý nước đi tốt nhất cho người chơi hiện tại.
  *          Tận dụng AIPlayer.chooseColumn() với depth=4 để gợi ý nhanh.
- *          View highlight cột được gợi ý bằng màu vàng nhấp nháy.
+ *          View highlight cột được gợi ý bằng màu vàng trong 2 giây.
  */
 package vn.edu.nlu.fit.controller;
 
@@ -18,7 +19,11 @@ import java.awt.Color;
 public class HintAdvisor {
 
     /**
-     * Trả về cột mà người chơi hiện tại nên đi.
+     * UC12 – Trả về cột mà người chơi hiện tại nên đi.
+     * @author Trần Anh Tuấn (MSSV: 23130372)
+     *
+     * Tạo AIPlayer tạm thời với depth=4 để phân tích nhanh,
+     * sử dụng bản sao bàn cờ để không ảnh hưởng game thực.
      *
      * @param game  Game hiện tại
      * @return chỉ số cột nên đi, -1 nếu không có cột hợp lệ

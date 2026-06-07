@@ -11,7 +11,7 @@ public class ConnectFourGame {
     private int rows, cols;
     // [update - Thanh Tú] Quản lý điểm số qua nhiều ván
     private ScoreManager scoreManager;
-    // [update - v2.0 - Nhã Trân] Lưu lịch sử nước đi để hỗ trợ chức năng Undo
+    // [UC17 - Trần Anh Tuấn] Lưu lịch sử nước đi để hỗ trợ chức năng Undo
     private MoveHistory moveHistory;
 
     public ConnectFourGame(int rows, int cols, WinChecker winChecker) {
@@ -22,7 +22,7 @@ public class ConnectFourGame {
         this.gameState = new GameState();
         this.winChecker = winChecker;
         this.scoreManager = new ScoreManager();// [update - Thanh Tú]
-        this.moveHistory = new MoveHistory();//[update - Nhã Trân]
+        this.moveHistory = new MoveHistory();// [UC17 - Trần Anh Tuấn]
     }
 
     public void setPlayers(Player player1, Player player2){
@@ -44,7 +44,8 @@ public class ConnectFourGame {
         board.setCell(row, col, currentPlayer.getId());
 
         Move move = new Move(row, col, currentPlayer);
-        moveHistory.push(move);//[update - Người 2]
+        // [UC17 - Trần Anh Tuấn] Lưu nước đi vào lịch sử để hỗ trợ Undo
+        moveHistory.push(move);
 
         if (winChecker.checkWin(board, row, col, currentPlayer.getId())) {
             gameState.setWinner(currentPlayer);
@@ -67,7 +68,7 @@ public class ConnectFourGame {
         this.board = new Board(rows, cols);
         playerManager.reset();
         gameState.reset();
-        moveHistory.clear();//[update - Nhã Trân]
+        moveHistory.clear();// [UC17 - Trần Anh Tuấn]
     }
 
     public boolean isGameOver() {
@@ -86,27 +87,46 @@ public class ConnectFourGame {
         return board.getCols();
     }
 
-    // [update - Nhã Trân] Hoàn tác nước đi gần nhất
+    /**
+     * UC17 – Hoàn tác nước đi gần nhất.
+     * @author Trần Anh Tuấn (MSSV: 23130372)
+     *
+     * Xóa quân khỏi bàn cờ, hoàn tác điểm số (nếu game đã kết thúc),
+     * và chuyển lại lượt cho người vừa đi.
+     *
+     * @return Move vừa hoàn tác, hoặc null nếu không có nước đi nào
+     */
     public Move undoLastMove() {
-        // Không có nước đi nào để hoàn tác
+        // UC17: Không có nước đi nào để hoàn tác
         if (moveHistory.isEmpty()) return null;
 
-        // Lấy nước đi cuối từ stack và xóa quân khỏi board
+        // UC17: Lấy nước đi cuối từ stack và xóa quân khỏi board
         Move lastMove = moveHistory.pop();
         board.setCell(lastMove.getRow(), lastMove.getCol(), 0); // 0 = ô trống
 
         if (gameState.isGameOver()) {
-            // Nếu vừa có người thắng → reset gameState về đang chơi
+            // UC17: Nếu game đã kết thúc → hoàn tác điểm số và reset gameState
+            if (gameState.getWinner() != null) {
+                scoreManager.undoWin(gameState.getWinner());
+            } else if (gameState.isDraw()) {
+                scoreManager.undoDraw();
+            }
             gameState.reset();
         } else {
-            // Undo xong → trả lượt về người đã đi nước đó
+            // UC17: Game chưa over → player đã bị switch → switch ngược lại
             playerManager.switchToNextPlayer();
         }
 
         return lastMove;
     }
-    // Kiểm tra còn lịch sử nước đi để undo không
-    // Controller dùng để hiển thị thông báo khi stack rỗng
+
+    /**
+     * UC17 – Kiểm tra còn lịch sử nước đi để undo không.
+     * @author Trần Anh Tuấn (MSSV: 23130372)
+     *
+     * Controller dùng để hiển thị thông báo khi stack rỗng.
+     * @return true nếu còn nước đi trong lịch sử
+     */
     public boolean hasMoveHistory() {
         return !moveHistory.isEmpty();
     }
