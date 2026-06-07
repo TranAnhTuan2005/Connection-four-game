@@ -7,7 +7,7 @@ package vn.edu.nlu.fit.view;
  * @version 1.0
  * @desc    Tạo hiệu ứng quân cờ rơi từ trên xuống vị trí đích.
  *          Sử dụng Swing Timer 60fps, tổng thời gian ~300ms.
- * @history v1.0 2026-06-01 - Tạo mới
+ * @history v1.0 2026-06-06 - Tạo mới
  */
 import vn.edu.nlu.fit.model.Player;
 import javax.swing.Timer;
