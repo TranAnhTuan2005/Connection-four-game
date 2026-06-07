@@ -36,7 +36,7 @@ public class ConnectFourController {
 
     private final ConnectFourGame model;
     private final ConnectFourView view;
-    // [v2.0 - Người 5] Service gợi ý nước đi
+    // [UC12 - Trần Anh Tuấn] Service gợi ý nước đi
     private final HintAdvisor hintAdvisor;
 
     // UC2 – Bước 2.1.0: Lưu chế độ chơi hiện tại (PVP hoặc PVE)
@@ -54,7 +54,7 @@ public class ConnectFourController {
     public ConnectFourController(ConnectFourGame model, ConnectFourView view) {
         this.model = model;
         this.view = view;
-        // [v2.0 - Người 5] Khởi tạo HintAdvisor
+        // [UC12 - Trần Anh Tuấn] Khởi tạo HintAdvisor
         this.hintAdvisor = new HintAdvisor();
         // UC2a – Bước 2.1.0: Chế độ mặc định là PVP
         this.currentMode = GameMode.PVP;
@@ -121,11 +121,12 @@ public class ConnectFourController {
         // ComboBox cấp độ AI
         view.getDifficultyComboBox().addActionListener(e -> handleDifficultyChange());
 
-        // [v2.0 - Người 2] Đăng ký lắng nghe sự kiện Undo
+        // [UC17 - Trần Anh Tuấn] Đăng ký lắng nghe sự kiện Undo
         view.getUndoButton().addActionListener(e -> handleUndo());
 
-        // [Nhánh main] Đăng ký lắng nghe sự kiện cho 3 nút: Gợi ý, Lưu, Tải ván chơi
+        // [UC12 - Trần Anh Tuấn] Đăng ký lắng nghe sự kiện Gợi ý nước đi
         view.getHintButton().addActionListener(e -> handleHint());
+        // [UC14 - Trần Anh Tuấn] Đăng ký lắng nghe sự kiện Lưu/Tải ván chơi
         view.getSaveButton().addActionListener(e -> handleSave());
         view.getLoadButton().addActionListener(e -> handleLoad());
     }
@@ -380,13 +381,17 @@ public class ConnectFourController {
     }
 
     // ========================================================================
-    // [v2.0 - Nhã Trân] UNDO
+    // [UC17 - Trần Anh Tuấn (23130372)] UNDO — Hoàn tác nước đi
     // ========================================================================
 
     /**
+     * UC17 – Hoàn tác nước đi.
+     * @author Trần Anh Tuấn (MSSV: 23130372)
+     *
      * Xử lý khi người dùng nhấn nút Undo.
      * PvP: hoàn tác 1 nước đi (lượt trước).
      * PvE: hoàn tác 2 nước đi (AI + Human) để trả lại lượt cho người chơi.
+     * Nếu game đã kết thúc (thắng/hòa) → hoàn tác điểm số và trạng thái game.
      */
     private void handleUndo() {
         if (!model.hasMoveHistory()) {
@@ -428,12 +433,16 @@ public class ConnectFourController {
     }
 
     // ========================================================================
-    // [v2.0 - Người 5] HINT + SAVE + LOAD
+    // [UC12 + UC14 - Trần Anh Tuấn (23130372)] HINT + SAVE + LOAD
     // ========================================================================
 
     /**
+     * UC12 – Gợi ý nước đi.
+     * @author Trần Anh Tuấn (MSSV: 23130372)
+     *
      * Xử lý khi người dùng nhấn nút Hint.
-     * Tìm cột tốt nhất theo phân tích AI và highlight cột đó.
+     * Tạo AIPlayer tạm thời phân tích bàn cờ hiện tại,
+     * tìm cột tốt nhất và highlight cột đó trên giao diện trong 2 giây.
      */
     private void handleHint() {
         if (model.isGameOver()) {
@@ -451,8 +460,12 @@ public class ConnectFourController {
     }
 
     /**
+     * UC14 – Lưu ván chơi.
+     * @author Trần Anh Tuấn (MSSV: 23130372)
+     *
      * Xử lý khi người dùng nhấn nút Save.
      * Mở JFileChooser cho người dùng chọn vị trí lưu file .cf4.
+     * Gọi GameSerializer.save() để serialize trạng thái model ra file.
      */
     private void handleSave() {
         JFileChooser chooser = new JFileChooser();
@@ -476,8 +489,12 @@ public class ConnectFourController {
     }
 
     /**
+     * UC14 – Tải ván chơi.
+     * @author Trần Anh Tuấn (MSSV: 23130372)
+     *
      * Xử lý khi người dùng nhấn nút Load.
      * Mở JFileChooser cho người dùng chọn file .cf4 để khôi phục ván chơi.
+     * Gọi GameSerializer.load() để deserialize trạng thái từ file vào model.
      */
     private void handleLoad() {
         JFileChooser chooser = new JFileChooser();
@@ -503,7 +520,9 @@ public class ConnectFourController {
     }
 
     /**
-     * Vẽ lại toàn bộ bàn cờ từ trạng thái model (dùng sau khi load).
+     * UC14 – Vẽ lại toàn bộ bàn cờ từ trạng thái model (dùng sau khi load).
+     * @author Trần Anh Tuấn (MSSV: 23130372)
+     *
      * Tạo các HumanPlayer tạm thời chỉ để có màu hiển thị đúng.
      */
     private void refreshBoardFromModel() {

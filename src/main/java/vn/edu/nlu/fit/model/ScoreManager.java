@@ -27,14 +27,20 @@ public class ScoreManager {
         drawCount++;
     }
 
-    /** Hoàn tác cộng điểm thắng (khi undo nước đi thắng) */
+    /**
+     * UC17 – Hoàn tác cộng điểm thắng (khi undo nước đi thắng).
+     * @author Trần Anh Tuấn (MSSV: 23130372)
+     */
     public void undoWin(Player winner) {
         if (winner == null) return;
         if (winner.getId() == 1 && player1Score > 0) player1Score--;
         else if (winner.getId() == 2 && player2Score > 0) player2Score--;
     }
 
-    /** Hoàn tác đếm ván hòa (khi undo nước đi cuối gây hòa) */
+    /**
+     * UC17 – Hoàn tác đếm ván hòa (khi undo nước đi cuối gây hòa).
+     * @author Trần Anh Tuấn (MSSV: 23130372)
+     */
     public void undoDraw() {
         if (drawCount > 0) drawCount--;
     }
