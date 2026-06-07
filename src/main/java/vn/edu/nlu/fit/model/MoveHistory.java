@@ -29,8 +29,7 @@ public class MoveHistory {
      * @param move Nước đi vừa thực hiện (không được null)
      */
     public void push(Move move) {
-        if (move == null) return;
-        stack.push(move);
+        if (move != null) stack.push(move);
     }
 
     /**
@@ -40,8 +39,7 @@ public class MoveHistory {
      * @return nước đi cuối cùng, hoặc null nếu stack rỗng
      */
     public Move pop() {
-        if (stack.isEmpty()) return null;
-        return stack.pop();
+        return stack.isEmpty() ? null : stack.pop();
     }
 
     /**
@@ -62,7 +60,6 @@ public class MoveHistory {
      * @return nước đi cuối cùng, hoặc null nếu stack rỗng
      */
     public Move peek() {
-        if (stack.isEmpty()) return null;
         return stack.peek();
     }
 
