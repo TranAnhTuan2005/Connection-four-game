@@ -75,22 +75,29 @@ public class PieceDropAnimator {
                 if (currentRow[0] > 0) {
                     cellPanels[currentRow[0] - 1][col].setPlayer(null);
                 }
-            // Xóa quân khỏi hàng hiện tại
-            cellPanels[currentRow[0]][col].setPlayer(null);
-
-            // Di chuyển xuống một hàng
-            currentRow[0]++;
+                // Hiện quân ở hàng hiện tại
+                cellPanels[currentRow[0]][col].setPlayer(player);
+                // chuẩn bị cho lần di chuyển tiếp theo
+                currentRow[0]++;
         }
-            // Hiện quân ở hàng mới
-            cellPanels[currentRow[0]][col].setPlayer(player);
 
-            // Đến đích → dừng timer, gọi callback
+            // Quân đã đến hàng đích → kết thúc animation
             if (currentRow[0] >= targetRow) {
+                // Xóa quân ở hàng trước hàng đích (nếu có)
+                if (currentRow[0] > 0) {
+                    cellPanels[currentRow[0] - 1][col].setPlayer(null);
+                }
+                // Đặt quân chính thức vào hàng đích
+                cellPanels[targetRow][col].setPlayer(player);
+
+                // Dừng timer và gọi callback → Controller tiếp tục logic game
                 ((Timer) e.getSource()).stop();
                 if (onComplete != null) onComplete.run();
             }
         };
 
+        // Gắn listener vào timer rồi khởi động
+        timer.addActionListener(tick);
         timer.start();
     }
 }
